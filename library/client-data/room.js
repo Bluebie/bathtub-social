@@ -31,13 +31,24 @@ class RoomClient extends EventEmitter {
       this.sse = new EventSource(requestPath)
       this.sse.onmessage = ({data}) => {
         let message = JSON.parse(data)
-        if (this[`_message_${message.type}`]) {
-          this[`_message_${message.type}`](message)
+        console.log("SSE", message)
+        if (this[`_message_${message.messageType}`]) {
+          this[`_message_${message.messageType}`](message.data)
         } else {
           console.info(`Unhandled server sent event:`, message)
         }
       }
     }
+  }
+
+  async updateAttributes(personAttributes) {
+    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, { attributes: personAttributes })
+    if (response.error) throw new Error(response.error)
+    else if (response.success) return true
+  }
+
+  getPerson(identity) {
+    return this.people[identity]
   }
 
   async leave() {
@@ -64,14 +75,14 @@ class RoomClient extends EventEmitter {
 
   // send a direct message to another user (i.e. for establishing a webrtc connection)
   async dm(toIdentity, messageObject) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/p2p`, { ...message, to: toIdentity })
+    let response = await this.postJSON(uri`/rooms/${this.roomID}/send`, { ...message, to: toIdentity })
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
   }
 
   // broadcast arbitrary information to the room
   async broadcast(message) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/broadcast`, message)
+    let response = await this.postJSON(uri`/rooms/${this.roomID}/send`, message)
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
   }
@@ -108,10 +119,10 @@ class RoomClient extends EventEmitter {
   _message_roomState(message) {
     this.roomID = message.roomID
     this.architecture = message.architecture
-    this.people = message.people
+    this.people = Object.fromEntries(message.people.map(x => [x.identity, x]))
     this.maxPeople = message.maxPeople
     this.emit('reloaded')
-    this.emit('peopleChange')
+    this.emit('peopleChange', this)
   }
 
   // when a person joins, add them to the people list
@@ -123,7 +134,9 @@ class RoomClient extends EventEmitter {
 
   // when a person leaves, remove them from the people list
   _message_personLeave({ identity }) {
-    this.emit('personLeave', this.people[identity])
+    let person = this.people[identity]
+    delete this.people[identity]
+    this.emit('personLeave', person)
     this.emit('peopleChange', this)
   }
 
@@ -139,6 +152,7 @@ class RoomClient extends EventEmitter {
 
   // when a broadcast (room-wide) message is distributed
   _message_message(message) {
+    console.log('message', message)
     if (message.to) this.emit('dm', message)
     else this.emit('broadcast', message)
     if (message.type == 'text') this.emit('text', message)

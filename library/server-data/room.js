@@ -81,7 +81,7 @@ class Room {
   processAppend({ messageType, data }) {
     if (messageType == 'personJoin') {
       // when a person joins, add their data to the person collection
-      if (!this.getPerson(data.identity)) this.people.push(data)
+      if (!this.getPerson(data.identity)) this.people[data.identity] = data
 
     } else if (messageType == 'personLeave') {
       // when a person leaves, remove any people with matching identity
