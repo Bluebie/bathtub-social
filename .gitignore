@@ -1,5 +1,6 @@
 # Bathtub specific
 build/*
+sync.sh
 
 # Logs
 logs

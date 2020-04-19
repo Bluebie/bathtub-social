@@ -22,7 +22,6 @@ class Identity {
   signRequest(pathname, message) {
     let signedContent = [Buffer.from(pathname), Buffer.from(message)]
     let signature = nacl.sign.detached(Buffer.concat(signedContent), this.keyPair.secretKey)
-    console.log("signature length:", signature.byteLength)
     return {
       "X-Bathtub-Identity": this.base64.publicKey,
       "X-Bathtub-Signature": Buffer.from(signature).toString('base64')
@@ -40,8 +39,8 @@ class Identity {
   // fetch request which is signed using this identity
   signedFetch(path, options = {}) {
     let url = new URL(path, "http://placeholder/")
-    let signatureHeaders = this.identity.signRequest(url.pathname, options.body || "")
-    return fetch(pathname, {
+    let signatureHeaders = this.signRequest(url.pathname, options.body || "")
+    return fetch(url.pathname, {
       ...options,
       headers: {
         ...(options.headers || {}),

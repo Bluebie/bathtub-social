@@ -7,7 +7,7 @@ const nacl = require('tweetnacl/nacl-fast')
 // and X-Bathtub-Signature headers; adds req.sig object containing publicKey and valid properties
 // JSON bodies will be parsed, otherwise body is left as a raw buffer like bodyParser.raw()
 module.exports.signedMiddleware = [
-  bodyParser.raw(),
+  bodyParser.raw({ type: "*/*" }),
   (req, res, next)=> {
     let pathname = Buffer.from((new URL(req.originalUrl, "http://example.com/")).pathname)
     let identity = req.get('X-Bathtub-Identity') || req.query['X-Bathtub-Identity']
@@ -22,9 +22,11 @@ module.exports.signedMiddleware = [
       }
 
       // concat the content that needs to be signed
-      let signedContent = Buffer.concat([pathname, Buffer.from(req.query.data || req.body, 'utf-8')])
+      let signedComponents = [pathname]
+      if (Buffer.isBuffer(req.body)) signedComponents.push(req.body)
+      else if (req.query.data) signedComponents.push(Buffer.from(req.query.data, 'utf-8'))
       // validate the signature using ed25519 via tweetnacl-js
-      let valid = nacl.sign.detached.verify(signedContent, buf.signature, buf.identity)
+      let valid = nacl.sign.detached.verify(Buffer.concat(signedComponents), buf.signature, buf.identity)
       req.sig = { valid, identity }
     } else {
       req.sig = { valid: false }
