@@ -7,6 +7,8 @@ const fs = require('fs-extra')
 
 const appRootPath = require('app-root-path')
 const base = require('./provider-base')
+const TextComposer = require('./component-text-composer')
+const PresenceList = require('./component-presence-list')
 
 class TextRoomView extends base {
   constructor(roomID) {
@@ -25,11 +27,8 @@ class TextRoomView extends base {
   toHTML() {
     return html`<div class="text-room-container">
       <div class="text-room-log"></div>
-      <div class="text-room-presence"></div>
-      <form class="text-room-composer">
-        <input type="text" id="text-composer">
-        <input type="submit" id="text-submit-button" value="Send">
-      </form>
+      ${(new PresenceList()).render({})}
+      ${(new TextComposer()).render()}
     </div>`
   }
 }

@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 /* css animation to playback a three or five frame filmstrip avatar */
 .filmstrip img {
   width: 1em;
@@ -18,11 +22,21 @@
 }
 
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
-/* element for this: <div class="bubble" style="--hue: 200deg; --pointer-offset: 150px">message text</div> */
-.bubble {
+.bubble-row {
+  --anim-duration: 1s;
+  --anim-fn: ease;
+  display: flex;
+}
+
+.bubble-row .spacer { transition: flex-grow var(--anim-duration) var(--anim-fn); }
+.bubble-row .spacer.left { flex-grow: calc(var(--x) * 1000) }
+.bubble-row .spacer.right { flex-grow: calc((1.0 - var(--x)) * 1000) }
+
+.bubble-row .bubble {
   --border-width: 2px;
   --border-color: hsl(var(--hue) 80% 60%);
   --fill-color: hsl(var(--hue) 60% 95%);
+  flex-grow: 0;
   color: hsl(var(--hue) 30% 20%);
   font-family: sans-serif;
   --pointer-size: 10px;
@@ -32,9 +46,14 @@
   margin: 2ex;
   padding: 0.25ex 0.85ex 0.25ex 0.85ex;
   position: relative;
+  min-height: 1em;
+  
+  transition: 
+  background-color var(--anim-duration) var(--anim-fn),
+  border-color var(--anim-duration) var(--anim-fn);
 }
 
-.bubble::before {
+.bubble-row .bubble::before {
   display: block;
   width: var(--pointer-size);
   height: var(--pointer-size);
@@ -42,32 +61,48 @@
   content: "";
   position: absolute;
   bottom: calc(var(--pointer-size) * -0.7);
-  left: calc(var(--pointer-size) * -0.7 + var(--pointer-offset));
+  left: calc(var(--pointer-size) * -0.7 + var(--x) * (100% - var(--pointer-size) * 2) + var(--pointer-size));
   transform: rotate(45deg);
   background-color: var(--fill-color);
   clip-path: polygon(100% 0, 0 100%, 100% 100%);
+
+  transition:
+  left var(--anim-duration) var(--anim-fn),
+  background-color var(--anim-duration) var(--anim-fn),
+  border-color var(--anim-duration) var(--anim-fn);
 }
 
 
 /* development testing text-room styling */
-body.text-room .text-room-container {
+.text-room-container {
   display: flex;
 }
 
-body.text-room .text-room-container .text-room-log {
+.text-room-log {
   position: absolute;
   top: 0; left: 0; right: 20em; bottom: 2em;
-  background-color: red;
+  box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%);
+  overflow-x: scroll;
 }
 
-body.text-room .text-room-container .text-room-presence {
+.presence-component {
   position: absolute;
   top: 0; width: 20em; right: 0; bottom: 0;
-  background-color: green;
+  padding: 1ex;
+  box-sizing: border-box;
+  overflow-x: scroll;
 }
 
-body.text-room .text-room-container .text-room-composer {
+.presence-component .person::before {
+  content: "◼︎";
+  color: hsl(var(--hue) 80% 60%);
+}
+
+.text-composer {
+  display: flex;
   position: absolute;
   height: 2em; left: 0; right: 20em; bottom: 0;
-  background-color: blue;
 }
+
+.text-composer * { margin: 0.5ex; }
+.text-composer input[type=text] { flex-grow: 1; margin-right: 0; }

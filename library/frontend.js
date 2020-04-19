@@ -1,16 +1,24 @@
 const config = require('../package.json').bathtub
 const P2P = require('simple-peer')
 const RoomClient = require('./client-data/room')
-const Nanomap = require('nanomap')
+const html = require('nanohtml')
 const morph = require('nanomorph')
 const ChatBubbleComponent = require('./views/component-chat-bubble')
+const PresenceListComponent = require('./views/component-presence-list')
 
 // shortcuts
 const qsa = (q) => document.querySelectorAll(q)
 const qs = (q) => document.querySelector(q)
 
-let chatLog = []
-let chatLogMapper = new Nanomap({ gc: true }, ChatBubbleComponent)
+let chatLogComponents = []
+
+function renderChatLog() {
+  // remove old messages
+  while (chatLogComponents.length > 100) chatLogComponents.shift()
+  // update chatlog
+  morph(qs('.text-room-log'), html`<div class="text-room-log">${chatLogComponents.map(x => x.render())}</div>`)
+  setTimeout(()=> qs('.text-room-log').scrollTop = 999999999)
+}
 
 async function run() {
   let { roomID } = JSON.parse(document.body.dataset.json)
@@ -19,22 +27,17 @@ async function run() {
   let room = await RoomClient.getRoom({ roomID })
   console.log('Room:', room)
 
-  let name = 'Phoenix' //prompt("What's your name?")
-  let hue = Math.round(Math.random() * 360) + 'deg'
-  let pointerOffset = Math.round(Math.random() * 300) + 'px'
-  room.join({ name, hue, pointerOffset })
+  window.room = room
 
   room.on('text', ({identity, message}) => {
+    console.log("Text", {identity, message})
     let person = room.getPerson(identity)
-    chatLog.push({
-      hue: person.attributes.hue,
-      pointerOffset: person.attributes.pointerOffset,
-      text: `${person.attributes.name}: ${message}`
-    })
-    // remove old messages
-    while (chatLog.length > 10) chatLog.shift()
-    // update chatlog
-    morph(qs('.text-room-log'), html`<div class="chat-room-log">${chatLog.map(chatLogMapper)}</div>`)
+    if (!person) return console.error("Person doesn't exist with ID", identity)
+
+    let bubble = new ChatBubbleComponent(room, identity, `${person.attributes.name}: ${message}`)
+    chatLogComponents.push(bubble)
+
+    renderChatLog()
   })
 
   qs('form').onsubmit = (event) => {
@@ -44,13 +47,20 @@ async function run() {
     return false
   }
 
-  // presence
+  // handle presence updates
+  let presenceList = new PresenceListComponent()
   room.on('peopleChange', () => {
-    let peopleDivs = Object.values(room.people).map(person => 
-      html`<div class="person" data-identity="${person.identity}">${person.attributes.name}</div>`
-    )
-    morph(qs('div.text-room-presence'), html`<div class="text-room-presence">${peopleDivs}</div>`)
+    if (presenceList.update(room.people)) {
+      morph(qs('.presence-component'), presenceList.render(room.people))
+    }
+
+    renderChatLog()
   })
+
+  let name = prompt("What's your name?")
+  let hue = Math.round(Math.random() * 360)
+  let xPosition = Math.random()
+  room.join({ name, hue, xPosition })
 }
 
 window.onload = run
