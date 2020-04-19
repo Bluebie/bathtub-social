@@ -1,3 +1,6 @@
+# Bathtub specific
+build/*
+
 # Logs
 logs
 *.log

@@ -1,0 +1,9 @@
+{
+  "roomID": "graveyard",
+  "humanName": "The Old Graveyard",
+  "architecture": "graveyard",
+  "maxPeople": 30,
+  "links": {
+    "exit": "room:bathtub-hotel"
+  }
+}

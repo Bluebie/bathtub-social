@@ -1,0 +1,73 @@
+/* css animation to playback a three or five frame filmstrip avatar */
+.filmstrip img {
+  width: 1em;
+  margin-top: 0em;
+  display: block;
+}
+
+@keyframes filmstrip1x3 { to { margin-top: -3em; } }
+.filmstrip.length3 img {
+  height: 3em;
+  animation: filmstrip1x3 1s steps(3, start) infinite;
+}
+
+@keyframes filmstrip1x5 { to { margin-top: -5em; } }
+.filmstrip.length5 img {
+  height: 5em;
+  animation: filmstrip1x5 1s steps(5, start) infinite;
+}
+
+/* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
+/* element for this: <div class="bubble" style="--hue: 200deg; --pointer-offset: 150px">message text</div> */
+.bubble {
+  --border-width: 2px;
+  --border-color: hsl(var(--hue) 80% 60%);
+  --fill-color: hsl(var(--hue) 60% 95%);
+  color: hsl(var(--hue) 30% 20%);
+  font-family: sans-serif;
+  --pointer-size: 10px;
+  border: var(--border-width) solid var(--border-color);
+  border-radius: calc(var(--border-width) * 1.5);
+  background-color: var(--fill-color);
+  margin: 2ex;
+  padding: 0.25ex 0.85ex 0.25ex 0.85ex;
+  position: relative;
+}
+
+.bubble::before {
+  display: block;
+  width: var(--pointer-size);
+  height: var(--pointer-size);
+  border: var(--border-width) solid var(--border-color);
+  content: "";
+  position: absolute;
+  bottom: calc(var(--pointer-size) * -0.7);
+  left: calc(var(--pointer-size) * -0.7 + var(--pointer-offset));
+  transform: rotate(45deg);
+  background-color: var(--fill-color);
+  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+}
+
+
+/* development testing text-room styling */
+body.text-room .text-room-container {
+  display: flex;
+}
+
+body.text-room .text-room-container .text-room-log {
+  position: absolute;
+  top: 0; left: 0; right: 20em; bottom: 2em;
+  background-color: red;
+}
+
+body.text-room .text-room-container .text-room-presence {
+  position: absolute;
+  top: 0; width: 20em; right: 0; bottom: 0;
+  background-color: green;
+}
+
+body.text-room .text-room-container .text-room-composer {
+  position: absolute;
+  height: 2em; left: 0; right: 20em; bottom: 0;
+  background-color: blue;
+}

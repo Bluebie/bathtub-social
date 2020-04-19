@@ -1,0 +1,12 @@
+{
+  "layers": [
+    { "z": 0.5, "url": "table.png" },
+    { "z": 0.0, "url": "background.png" }
+  ],
+  "pathfinding": "pathfinding.png",
+  "regions": {
+    "url": "region-map.png",
+    "door-1": "#FF0000",
+    "wall": "#00FF00"
+  }
+}

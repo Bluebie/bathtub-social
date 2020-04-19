@@ -1,0 +1,13 @@
+{
+  "layers": [
+    { "z": 0.25, "url": "Wall Fragment 1.png" },
+    { "z": 0.78, "url": "Fenced Right.png" },
+    { "z": 0.75, "url": "Fenced Left.png" },
+    { "z": 0.0, "url": "background.png" }
+  ],
+  "regions": {
+    "url": "region-map.png",
+    "exit": "#FF0000",
+    "wall": "#00FF00"
+  }
+}
