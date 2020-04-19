@@ -1,5 +1,6 @@
 const express = require('express')
 const config = require('./package.json').bathtub
+const process = require('process')
 
 // rebuild static site
 const buildStaticSite = require('./library/build-static-site')
@@ -16,7 +17,8 @@ if (config.development) {
     next()
   })
   // serve live styles folder
-  app.get('/style', express.static('./style'))
+  app.use('/style', express.static('./style'))
+
   // dynamically rebuild bundle on request for development
   app.get('/bundle.js', async (req,res)=> {
     res.set('Content-Type', 'application/javascript')
@@ -28,6 +30,11 @@ if (config.development) {
 app.use('/rooms', require('./library/server-routes/route-room.js'))
 
 // add static server support in case there's no front end proxy during development
-app.use(express.static('./build'))
+//app.use(express.static('./build'))
 
-app.listen(8080)
+app.listen(process.env.SERVER_PORT || 8080)
+
+process.stdin.on("data", ()=> {
+  console.log("Terminating...")
+  process.exit()
+})
