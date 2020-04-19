@@ -87,7 +87,7 @@ module.exports = async function() {
 
 module.exports.devBundle = async () => {
   return (new Promise((resolve, reject) => {
-    var b = browserify()
+    var b = browserify({ debug: true, ignoreTransform: ['pack'] })
     b.add(appRoot.resolve('library/frontend.js'))
     b.bundle((err, buf) => {
       resolve(buf)
