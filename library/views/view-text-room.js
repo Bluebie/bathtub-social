@@ -2,13 +2,10 @@
 
 // Builds frontend main single page application markup
 const html = require('nanohtml')
-const raw = require('nanohtml/raw')
-const fs = require('fs-extra')
-
-const appRootPath = require('app-root-path')
 const base = require('./provider-base')
 const TextComposer = require('./component-text-composer')
 const PresenceList = require('./component-presence-list')
+const ChatLog = require('./component-chat-log')
 
 class TextRoomView extends base {
   constructor(roomID) {
@@ -26,7 +23,7 @@ class TextRoomView extends base {
 
   toHTML() {
     return html`<div class="text-room-container">
-      <div class="text-room-log"></div>
+      ${(new ChatLog()).render()}
       ${(new PresenceList()).render({})}
       ${(new TextComposer()).render()}
     </div>`

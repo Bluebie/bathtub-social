@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --anim-duration: 1s;
+  --anim-fn: ease;
+}
+
 /* css animation to playback a three or five frame filmstrip avatar */
 .filmstrip img {
   width: 1em;
@@ -23,9 +28,12 @@
 
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {
-  --anim-duration: 1s;
-  --anim-fn: ease;
   display: flex;
+  transform: scaleY(0.0);
+  transition: transform var(--anim-duration) var(--anim-fn);
+}
+.bubble-row.visible {
+  transform: scaleY(1.0);
 }
 
 .bubble-row .spacer { transition: flex-grow var(--anim-duration) var(--anim-fn); }
@@ -43,7 +51,7 @@
   border: var(--border-width) solid var(--border-color);
   border-radius: calc(var(--border-width) * 1.5);
   background-color: var(--fill-color);
-  margin: 2ex;
+  margin: 0.8ex;
   padding: 0.25ex 0.85ex 0.25ex 0.85ex;
   position: relative;
   min-height: 1em;
@@ -78,14 +86,14 @@
   display: flex;
 }
 
-.text-room-log {
+.chat-log {
   position: absolute;
   top: 0; left: 0; right: 20em; bottom: 2em;
   box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%);
   overflow-x: scroll;
 }
 
-.presence-component {
+.presence-list {
   position: absolute;
   top: 0; width: 20em; right: 0; bottom: 0;
   padding: 1ex;
@@ -93,9 +101,10 @@
   overflow-x: scroll;
 }
 
-.presence-component .person::before {
-  content: "◼︎";
+.presence-list .person::before {
+  content: "● ";
   color: hsl(var(--hue) 80% 60%);
+  transition: color var(--anim-duration) var(--anim-fn);
 }
 
 .text-composer {

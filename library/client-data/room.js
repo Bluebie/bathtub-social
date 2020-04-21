@@ -42,7 +42,12 @@ class RoomClient extends EventEmitter {
   }
 
   async updateAttributes(personAttributes) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, { attributes: personAttributes })
+    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, {
+      attributes: {
+        ...this.getPerson(this.identity.toPublicIdentity()).attributes,
+        ...personAttributes,
+      }
+    })
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
   }
@@ -119,14 +124,35 @@ class RoomClient extends EventEmitter {
   _message_roomState(message) {
     this.roomID = message.roomID
     this.architecture = message.architecture
-    this.people = Object.fromEntries(message.people.map(x => [x.identity, x]))
+    // for any new or updated people, insert/update them in to the person object
+    message.people.forEach(person => {
+      if (this.people[person.identity]) {
+        // remove all properties
+        Object.keys(this.people[person.identity]).forEach(key => { delete this.people[person.identity][key] })
+        // set all updated properties
+        Object.entries(person).forEach(([key, value]) => { this.people[person.identity][key] = value })
+        this.emit('personChange', this.people[person.identity])
+      } else {
+        this.people[person.identity] = person
+        this.emit('personJoin', this.people[person.identity])
+      }
+    })
+    // for any missing people, emit personLeave events and remove them from the local list
+    Object.keys(this.people).forEach(id => {
+      if (!message.people.some(x => x.identity == id)) {
+        this.emit('personLeave', this.people[id])
+        delete this.people[id]
+      }
+    })
+
     this.maxPeople = message.maxPeople
-    this.emit('reloaded')
     this.emit('peopleChange', this)
+    this.emit('reloaded')
   }
 
   // when a person joins, add them to the people list
   _message_personJoin(message) {
+    if (this.getPerson(message.identity)) return console.error(`Recieved personJoin event from existing person`, message)
     let person = this.people[message.identity] = message
     this.emit('personJoin', person)
     this.emit('peopleChange', this)
@@ -135,6 +161,7 @@ class RoomClient extends EventEmitter {
   // when a person leaves, remove them from the people list
   _message_personLeave({ identity }) {
     let person = this.people[identity]
+    if (!person) return console.error(`Recieved personLeave event from unknown person`, message)
     delete this.people[identity]
     this.emit('personLeave', person)
     this.emit('peopleChange', this)
@@ -142,11 +169,10 @@ class RoomClient extends EventEmitter {
 
   // when a detail about a person has been updated
   _message_personChange(message) {
-    this.people[message.identity] = {
-      ...this.people[message.identity],
-      ...message
-    }
-    this.emit('personChange', this.people[message.identity])
+    let person = this.getPerson(message.identity)
+    if (!person) return console.error(`Recieved personChange event from unknown person`, message)
+    Object.entries(message).forEach(([key, value])=> person[key] = value)
+    this.emit('personChange', person)
     this.emit('peopleChange', this)
   }
 

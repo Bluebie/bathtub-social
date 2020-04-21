@@ -11,11 +11,16 @@ class Identity {
     }
   }
 
+
+
   // returns a public identity object, for joining stuff
   toPublicIdentity() {
-    return {
-      publicKey: Buffer.from(this.keyPair.publicKey).toString('base64'),
-    }
+    return this.base64.publicKey
+  }
+
+  // returns a boolean, if this identity is our own
+  equals(identity) {
+    return Buffer.isBuffer(identity) ? identity.equals(this.keyPair.publicKey) : identity == this.base64.publicKey 
   }
 
   // accepts a string, signs it, returns an object with two custom headers to add to request

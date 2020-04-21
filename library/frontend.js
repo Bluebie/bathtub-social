@@ -3,64 +3,70 @@ const P2P = require('simple-peer')
 const RoomClient = require('./client-data/room')
 const html = require('nanohtml')
 const morph = require('nanomorph')
-const ChatBubbleComponent = require('./views/component-chat-bubble')
-const PresenceListComponent = require('./views/component-presence-list')
+const ChatLog = require('./views/component-chat-log')
+const ChatBubble = require('./views/component-chat-bubble')
+const PresenceList = require('./views/component-presence-list')
+const TextComposer = require('./views/component-text-composer')
+const HueRing = require('./views/widget-hue-ring')
 
 // shortcuts
-const qsa = (q) => document.querySelectorAll(q)
 const qs = (q) => document.querySelector(q)
-
-let chatLogComponents = []
-
-function renderChatLog() {
-  // remove old messages
-  while (chatLogComponents.length > 100) chatLogComponents.shift()
-  // update chatlog
-  morph(qs('.text-room-log'), html`<div class="text-room-log">${chatLogComponents.map(x => x.render())}</div>`)
-  setTimeout(()=> qs('.text-room-log').scrollTop = 999999999)
-}
 
 async function run() {
   let { roomID } = JSON.parse(document.body.dataset.json)
-  console.log('Room ID:', roomID)
+  let room = window.room = await RoomClient.getRoom({ roomID })
 
-  let room = await RoomClient.getRoom({ roomID })
-  console.log('Room:', room)
-
-  window.room = room
-
-  room.on('text', ({identity, message}) => {
-    console.log("Text", {identity, message})
-    let person = room.getPerson(identity)
-    if (!person) return console.error("Person doesn't exist with ID", identity)
-
-    let bubble = new ChatBubbleComponent(room, identity, `${person.attributes.name}: ${message}`)
-    chatLogComponents.push(bubble)
-
-    renderChatLog()
+  // setup UI components
+  let log = new ChatLog({
+    expires: '3s',
+    onClick: (mouseEvent, type, chatBubble) => {
+      if (room.identity.equals(chatBubble.person.identity)) {
+        new HueRing({
+          hue: chatBubble.person.attributes.hue,
+          position: mouseEvent,
+          onChoice: (newHue)=> {
+            room.updateAttributes({ hue: newHue })
+          }
+        })
+      }
+    }
   })
+  qs('.chat-log').replaceWith(log.render())
 
-  qs('form').onsubmit = (event) => {
-    room.text(qs('input[type=text]').value)
-    qs('input[type=text]').value = ''
-    event.preventDefault()
-    return false
-  }
+  let composer = new TextComposer({
+    onMessage: (text)=> {
+      room.text(text)
+    }
+  })
+  qs('.text-composer').replaceWith(composer.render())
 
   // handle presence updates
-  let presenceList = new PresenceListComponent()
+  let presence = new PresenceList({ room })
   room.on('peopleChange', () => {
-    if (presenceList.update(room.people)) {
-      morph(qs('.presence-component'), presenceList.render(room.people))
-    }
+    presence.render()
+    log.render()
+  })
+  qs('.presence-list').replaceWith(presence.render())
 
-    renderChatLog()
+  // handle room events
+  room.on('text', ({identity, message}) => {
+    let person = room.getPerson(identity)
+    if (!person) return console.error("Person doesn't exist with ID", identity)
+    log.appendText(person, `${person.attributes.name}: ${message}`)
+    log.render()
   })
 
-  let name = prompt("What's your name?")
-  let hue = Math.round(Math.random() * 360)
-  let xPosition = Math.random()
-  room.join({ name, hue, xPosition })
+  // when user closes window or navigates away, attempt to notify server they left
+  window.addEventListener("beforeunload", ()=> {
+    room.leave()
+  })
+
+  // join room
+  room.join({
+    name: "Phx" || prompt("What's your name?"),
+    hue: Math.round(Math.random() * 360),
+    x: Math.random()
+  })
 }
 
 window.onload = run
