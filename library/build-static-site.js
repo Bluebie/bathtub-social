@@ -70,6 +70,7 @@ module.exports = async function() {
   await (new Promise((resolve, reject) => {
     var b = browserify()
     b.add(appRoot.resolve('library/frontend.js'))
+    b.transform("sheetify")
     b.bundle()
     .pipe(fs.createWriteStream(`${buildDir}/bundle.js`))
     .once("close", ()=> resolve())
@@ -87,8 +88,9 @@ module.exports = async function() {
 
 module.exports.devBundle = async () => {
   return (new Promise((resolve, reject) => {
-    var b = browserify({ debug: true, ignoreTransform: ['pack'] })
+    var b = browserify({ debug: true })
     b.add(appRoot.resolve('library/frontend.js'))
+    b.transform("sheetify")
     b.bundle((err, buf) => {
       resolve(buf)
     })
