@@ -11,6 +11,7 @@
     "browserify": "^16.5.1",
     "bytes": "^3.1.0",
     "content-type": "^1.0.4",
+    "element-on": "^1.0.1",
     "encodeuricomponent-tag": "^1.0.1",
     "express": "^4.17.1",
     "express-reload": "^1.2.0",
@@ -18,12 +19,14 @@
     "image-size": "^0.8.3",
     "isomorphic-fetch": "^2.2.1",
     "js-beautify": "^1.11.0",
+    "mouse-event-offset": "^3.0.2",
     "nanocomponent": "^6.5.3",
     "nanohtml": "^1.9.1",
     "nanomorph": "^5.4.0",
     "p-queue": "^6.3.0",
     "parse-duration": "^0.1.2",
     "pathfinding": "^0.4.18",
+    "sheetify": "^8.0.0",
     "simple-peer": "^9.6.2",
     "sse-writer": "^3.0.4",
     "tweetnacl": "^1.0.3",
@@ -42,9 +45,7 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js",
-    "watch": "rm build/bundle.js.gz; ./node_modules/.bin/watchify library/frontend.js -o build/bundle.js -v -d --full-paths",
-    "build": "                       ./node_modules/.bin/browserify lib/frontend.js -o lib/bundle.js -v; gzip -9 -k -f build/bundle.js; cd tools; node build-static-site.js; cd .."
+    "start": "node index.js"
   },
   "bathtub": {
     "siteName": "Bathtub Social (beta)",
