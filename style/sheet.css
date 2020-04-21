@@ -29,11 +29,8 @@
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {
   display: flex;
-  transform: scaleY(0.0);
-  transition: transform var(--anim-duration) var(--anim-fn);
-}
-.bubble-row.visible {
-  transform: scaleY(1.0);
+  transition: all var(--anim-duration) var(--anim-fn);
+  position: relative;
 }
 
 .bubble-row .spacer { transition: flex-grow var(--anim-duration) var(--anim-fn); }
@@ -49,9 +46,9 @@
   font-family: sans-serif;
   --pointer-size: 10px;
   border: var(--border-width) solid var(--border-color);
-  border-radius: calc(var(--border-width) * 1.5);
+  border-radius: 3px;
   background-color: var(--fill-color);
-  margin: 0.8ex;
+  margin-bottom: 1.6ex;
   padding: 0.25ex 0.85ex 0.25ex 0.85ex;
   position: relative;
   min-height: 1em;
@@ -91,6 +88,7 @@
   top: 0; left: 0; right: 20em; bottom: 2em;
   box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%);
   overflow-x: scroll;
+  padding-top: 0.8ex;
 }
 
 .presence-list {
