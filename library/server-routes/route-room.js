@@ -81,8 +81,13 @@ app.get('/:roomID/event-stream', requireSignature, (req, res) => {
   req.on('aborted', () => {
     console.log("Aborted", req.sig.identity)
     room.log.off('append', append)
+    // if the user is still in the presence list, remove them after a timeout
     userTimeouts.set(person, setTimeout(() => {
-      room.personLeave(req.sig.identity)
+      try {
+        if (room.getPerson(req.sig.identity)) {
+          room.personLeave(req.sig.identity)
+        }
+      } catch(err) { console.warn(err) }
     }, parseDuration(config.disconnectTimeout)))
   })
   
