@@ -29,8 +29,6 @@
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {
   display: flex;
-  transition: all var(--anim-duration) var(--anim-fn);
-  position: relative;
 }
 
 .bubble-row .spacer { transition: flex-grow var(--anim-duration) var(--anim-fn); }
@@ -44,14 +42,14 @@
   flex-grow: 0;
   color: hsl(var(--hue) 30% 20%);
   font-family: sans-serif;
-  --pointer-size: 10px;
+  --pointer-size: 7px;
   border: var(--border-width) solid var(--border-color);
-  border-radius: 3px;
+  border-radius: 8px;
   background-color: var(--fill-color);
-  margin-bottom: 1.6ex;
-  padding: 0.25ex 0.85ex 0.25ex 0.85ex;
+  margin-bottom: 12px;
+  padding: 3px 7px 3px 7px;
   position: relative;
-  min-height: 1em;
+  min-height: 12px;
   
   transition: 
   background-color var(--anim-duration) var(--anim-fn),
@@ -59,17 +57,17 @@
 }
 
 .bubble-row .bubble::before {
+  /* calc stuff */
+  /* aproximate hypotonuse theorum */
+  --aprox-hypot: 1.4142135624;
+  left: calc(var(--x) * (100% - (var(--pointer-size) * 2)));
+  bottom: calc((var(--pointer-size) * -2) - 1px);
+
   display: block;
-  width: var(--pointer-size);
-  height: var(--pointer-size);
-  border: var(--border-width) solid var(--border-color);
-  content: "";
+  content: ""; width: 0; height: 0;
   position: absolute;
-  bottom: calc(var(--pointer-size) * -0.7);
-  left: calc(var(--pointer-size) * -0.7 + var(--x) * (100% - var(--pointer-size) * 2) + var(--pointer-size));
-  transform: rotate(45deg);
-  background-color: var(--fill-color);
-  clip-path: polygon(100% 0, 0 100%, 100% 100%);
+  border: var(--pointer-size) solid transparent;
+  border-top-color: var(--border-color);
 
   transition:
   left var(--anim-duration) var(--anim-fn),
@@ -88,7 +86,9 @@
   top: 0; left: 0; right: 20em; bottom: 2em;
   box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%);
   overflow-x: scroll;
-  padding-top: 0.8ex;
+  padding-top: 2ex;
+  padding-left: 1ex;
+  padding-right: 1ex;
 }
 
 .presence-list {

@@ -18,7 +18,7 @@ async function run() {
 
   // setup UI components
   let log = new ChatLog({
-    expires: '3s',
+    expires: '30s',
     onClick: (mouseEvent, type, chatBubble) => {
       if (room.identity.equals(chatBubble.person.identity)) {
         new HueRing({
@@ -63,7 +63,7 @@ async function run() {
 
   // join room
   room.join({
-    name: "Phx" || prompt("What's your name?"),
+    name: prompt("What's your name?"),
     hue: Math.round(Math.random() * 360),
     x: Math.random()
   })
