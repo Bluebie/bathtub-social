@@ -5,6 +5,27 @@
 :root {
   --anim-duration: 1s;
   --anim-fn: ease;
+
+  /* color schemes support */
+  --bg-hue: 0deg;
+  --bg-sat: 0%;
+  --bg-lum: 100%;
+
+  --fg-hue: 0deg;
+  --fg-sat: 0%;
+  --fg-lum: 0%;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-lum: 10%;
+    --fg-lum: 95%;
+  }
+}
+
+html, body {
+  background-color: hsl(var(--bg-hue) var(--bg-sat) var(--bg-lum));
+  color: hsl(var(--fg-hue) var(--fg-sat) var(--fg-lum));
 }
 
 /* css animation to playback a three or five frame filmstrip avatar */
@@ -53,7 +74,15 @@
   
   transition: 
   background-color var(--anim-duration) var(--anim-fn),
-  border-color var(--anim-duration) var(--anim-fn);
+  border-color var(--anim-duration) var(--anim-fn),
+  color var(--anim-duration) var(--anim-fn);
+}
+
+@media (prefers-color-scheme: dark) {
+  .bubble-row .bubble {
+    --fill-color: hsl(var(--hue) 60% 20%);
+    color: hsl(var(--hue) 100% 95%);
+  }
 }
 
 .bubble-row .bubble::before {
@@ -112,4 +141,4 @@
 }
 
 .text-composer * { margin: 0.5ex; }
-.text-composer input[type=text] { flex-grow: 1; margin-right: 0; }
+.text-composer input[type=text] { flex-grow: 1; margin-right: 0; background-color: inherit; color: inherit; }

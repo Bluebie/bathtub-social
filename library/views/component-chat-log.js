@@ -58,16 +58,6 @@ class ChatLogComponent extends Nanocomponent {
     await delay(this.fadeDuration)
 
     container.remove()
-
-    // scroll the view
-    // let scroller = ()=> {
-    //   this.element.scrollTop += 1
-    //   if (this.element.scrollTop < this.element.scrollHeight - this.element.offsetHeight) {
-    //     requestAnimationFrame(scroller)
-    //   }
-    // }
-
-    // scroller()
   }
 
   // create the initial container element
