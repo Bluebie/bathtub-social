@@ -2,6 +2,8 @@
 const Nanocomponent = require('nanocomponent')
 const html = require('nanohtml')
 
+module.exports = PresenceListComponent
+
 class PresenceListComponent extends Nanocomponent {
   constructor({room, onClick} = {}) {
     super()
@@ -28,5 +30,3 @@ class PresenceListComponent extends Nanocomponent {
     return true
   }
 }
-
-module.exports = PresenceListComponent
