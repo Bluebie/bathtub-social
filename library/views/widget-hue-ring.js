@@ -64,7 +64,7 @@ class HueRingWidget {
     let midPoint = event.currentTarget.clientWidth / 2
     let [mX, mY] = mouseOffset(event)
     let xy = { x: mX - midPoint, y: mY - midPoint }
-    return (((Math.atan2(xy.y, -xy.x) / Math.PI) * 180) + 450) % 360
+    return Math.round(((((Math.atan2(xy.y, -xy.x) / Math.PI) * 180) + 450) % 360) * 100) / 100
   }
 
   onMouseMove(event) {

@@ -4,7 +4,6 @@ const process = require('process')
 
 // rebuild static site
 const buildStaticSite = require('./library/build-static-site')
-buildStaticSite()
 
 var app = express()
 app.disable('x-powered-by') // lets not waste that bandwidth
@@ -24,6 +23,8 @@ if (config.development) {
     res.set('Content-Type', 'application/javascript')
     res.send(await buildStaticSite.devBundle())
   })
+} else {
+  buildStaticSite()
 }
 
 // add route handlers for /room API

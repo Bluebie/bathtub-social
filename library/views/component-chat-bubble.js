@@ -6,8 +6,6 @@
 const Nanocomponent = require('nanocomponent')
 const html = require('nanohtml')
 
-module.exports = ChatBubbleComponent
-
 class ChatBubbleComponent extends Nanocomponent {
   constructor({ person, text, onClick } = {}) {
     super()
@@ -44,3 +42,5 @@ class ChatBubbleComponent extends Nanocomponent {
     return [hue, x, this.text].some((value, index) => cacheKey[index] != value)
   }
 }
+
+module.exports = ChatBubbleComponent

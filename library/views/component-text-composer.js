@@ -2,9 +2,7 @@
 const Nanocomponent = require('nanocomponent')
 const html = require('nanohtml')
 
-module.exports = PresenceListComponent
-
-class PresenceListComponent extends Nanocomponent {
+class TextComposerComponent extends Nanocomponent {
   constructor({ onMessage } = {}) {
     super()
     this.loaded = false
@@ -43,3 +41,5 @@ class PresenceListComponent extends Nanocomponent {
     return false
   }
 }
+
+module.exports = TextComposerComponent

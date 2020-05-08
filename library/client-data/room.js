@@ -1,6 +1,7 @@
 const EventEmitter = require('events')
 const Identity = require('../crypto/identity')
 const uri = require('encodeuricomponent-tag') // uri encodes template literals
+const updateObject = require('../functions/update-object')
 const config = require('../../package.json').bathtub
 // ensure fetch is available
 require('isomorphic-fetch')
@@ -189,12 +190,7 @@ class RoomClient extends EventEmitter {
     let person = this.getPerson(message.identity)
     if (!person) return console.error(`Recieved personChange event from unknown person`, message)
     // for each update, resolve the path and overwrite the updated value
-    message.updates.forEach(([path, value])=> {
-      let object = person
-      let finalKey = path.pop()
-      path.forEach(key => object = object[key])
-      object[finalKey] = value
-    })
+    updateObject(person, message.updates)
 
     this.emit('personChange', person)
     this.emit('peopleChange', this)

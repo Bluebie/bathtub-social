@@ -59,12 +59,6 @@ module.exports = async function() {
   await fs.emptyDir(`${buildDir}/style`)
   await fs.copy(appRoot.resolve('style'), `${buildDir}/style`, { preserveTimestamps: true })
   await recursiveZip(`${buildDir}/style`)
-  
-  // build empty filmstrips folders
-  await fs.emptyDir(`${buildDir}/filmstrips`)
-  for (let entry of (await fs.readdir(appRoot.resolve('configuration/rooms'))).filter(x => x.endsWith('.json'))) {
-    await fs.emptyDir(`${buildDir}/filmstrips/${entry.replace('.json', '')}`)
-  }
 
   // build frontend javascript
   await (new Promise((resolve, reject) => {
@@ -92,7 +86,8 @@ module.exports.devBundle = async () => {
     b.add(appRoot.resolve('library/frontend.js'))
     b.transform("sheetify")
     b.bundle((err, buf) => {
-      resolve(buf)
+      if (err) reject(new Error(err))
+      else resolve(buf)
     })
   }))
 }

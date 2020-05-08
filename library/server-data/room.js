@@ -2,15 +2,7 @@
 // and a current state, as well as meta information about architecture and stuff like that
 const SubscriptionLog = require('./subscription-log')
 const config = require('../../package.json').bathtub
-
-function updateObject(person, updates) {
-  updates.forEach(([path, value])=> {
-    let object = person
-    let finalKey = path.pop()
-    path.forEach(key => object = object[key])
-    object[finalKey] = value
-  })
-}
+const updateObject = require('../functions/update-object')
 
 class Room {
   constructor(config) {
@@ -72,7 +64,7 @@ class Room {
     if (!person) throw new Error("This person isn't in the room")
 
     // test the update to verify person object doesn't get too big
-    let clone = JSON.parse(JSON.stringify(this.getPerson(person)))
+    let clone = JSON.parse(JSON.stringify(person))
     updateObject(clone, updates)
     if (JSON.stringify(clone).length > config.personObjectMaxSize) {
       throw new Error("Person Object would grow too large! Cannot accept update")

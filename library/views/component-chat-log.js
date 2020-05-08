@@ -6,8 +6,6 @@ const ChatBubble = require('./component-chat-bubble')
 const delay = require('delay')
 const Scroller = require('./util-scroll-smooth')
 
-module.exports = ChatLogComponent
-
 class ChatLogComponent extends Nanocomponent {
   // - onClick is called when a built in component is clicked on
   // - expires is how much time components stay on screen for
@@ -76,3 +74,5 @@ class ChatLogComponent extends Nanocomponent {
     return false
   }
 }
+
+module.exports = ChatLogComponent

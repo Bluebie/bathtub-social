@@ -126,9 +126,12 @@ app.post('/:roomID/leave', requireSignature, (req, res) => {
 app.post('/:roomID/set-attributes', requireSignature, (req, res) => {
   let room = rooms[req.params.roomID]
   if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
-  if (!room.getPerson(req.sig.identity)) return res.status(500).send({ error: "User is not in room, cannot update" })
-  if (!req.body.attributes) return res.status(500).send({ error: "attributes property in body is not optional" })
-  room.personChange(req.sig.identity, [...req.body.updates].map(([path, value]) => [['attributes', ...path], value]))
+  let person = room.getPerson(req.sig.identity)
+  if (!person) return res.status(500).send({ error: "User is not in room, cannot update" })
+
+  if (!Array.isArray(req.body.updates)) return res.status(500).send({ error: "updates property in body must be array" })
+  let prefixedUpdates = req.body.updates.map(([path, value]) => [['attributes', ...path], value])
+  room.personChange(req.sig.identity, prefixedUpdates)
   res.send({ ok: true })
 })
 
