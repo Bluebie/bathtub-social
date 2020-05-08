@@ -6,6 +6,7 @@ const config = require('../../package.json').bathtub
 const Room = require('../server-data/room')
 const { signedMiddleware, requireSignature } = require('../crypto/parse-request')
 const parseDuration = require('parse-duration')
+const sizeOf = require('image-size')
 
 const HTMLDocument = require('../views/html-document')
 const TextRoomView = require('../views/view-text-room')
@@ -138,6 +139,52 @@ app.post('/:roomID/send', requireSignature, (req, res) => {
   if (!room.getPerson(req.sig.identity)) return res.status(500).send({ error: "User is not in room, cannot send message" })
   room.send(req.sig.identity, req.body)
   res.send({ ok: true })
+})
+
+
+// filmstrip RAM storage
+let filmstripsData = new WeakMap()
+let filmstripInterval = parseDuration(config.filmstripInterval)
+let filmstripExpires = filmstripInterval * 4
+// upload a filmstrip to server memory
+app.post('/:roomID/filmstrips', requireSignature, (req, res)=> {
+  let room = rooms[req.params.roomID]
+  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
+  let person = room.getPerson(req.sig.identity)
+  if (!person) return res.status(500).send({ error: "You are not in this room, you can't publish a filmstrip yet" })
+  if (req.get('Content-Type') != "image/jpeg") return res.status(500).send({ error: "Post body must be a JPEG" })
+
+  if (!Buffer.isBuffer(req.body)) return res.status(500).send({ error: "Image data didn't arrive as a buffer??" })
+  if (req.body.byteLength > config.filmstripMaxData) return res.status(500).send({ error: "Image data is too large in bytes" })
+  if (req.body.byteLength < 16) return res.status(500).send({ error: "Image data is too small in bytes" })
+  
+  let size = sizeOf(req.body)
+  if (size.width != config.filmstripSize) return res.status(500).send({ error: "Filmstrip width is incorrect" })
+  if (size.height != config.filmstripSize * config.filmstripFrames) return res.status(500).send({ error: "Filmstrip height is incorrect" })
+  if (size.type != 'jpg') return res.status(500).send({ error: "File data does not look like JPEG" })
+
+  filmstripsData.set(person, req.body)
+
+  let filmstamp = Math.round((Date.now() - person.joined) / 250).toString(36)
+  room.personChange(person.identity, [["filmstamp"], filmstamp])
+
+  req.send({ ok: true, filmstamp })
+})
+
+app.get('/:roomID/filmstrips/:identity/:timestamp', (req, res)=> {
+  let room = rooms[req.params.roomID]
+  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
+  let person = room.getPerson(req.sig.identity)
+  if (!person) return res.status(404).send({ error: "Specified person identity doesn't exist in this room" })
+
+  let data = filmstripsData.get(person)
+  if (data) {
+    res.set('Content-Type', 'image/jpeg')
+    res.set('Cache-Control', `max-age=${Math.ceil(filmstripExpires / 1000)}`)
+    res.send(data)
+  } else {
+    res.status(404).send({ error: "No filmstrip data available for this user" })
+  }
 })
 
 module.exports = app
