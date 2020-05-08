@@ -60,6 +60,7 @@
     "reconnectInterval": "1s",
     "stunServers": [
       "stun:stun.l.google.com:19302"
-    ]
+    ],
+    "personObjectMaxSize": "10000"
   }
 }

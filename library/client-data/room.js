@@ -41,21 +41,38 @@ class RoomClient extends EventEmitter {
     }
   }
 
+  // update shared attributes for this user
+  // accepts either a structured array:
+  // [
+  //   [['path','to','property'], newValue],
+  //   [['path','to','otherProperty'], newValue2]
+  // ]
+  // or object form:
+  // {
+  //   "path.to.property": newValue,
+  //   "path.to.otherProperty": newValue2
+  // }
+  // All updates will be applied to the attributes object of this user as the root object.
+  // client cannot overwrite properties above that level. All data in person.attributes should
+  // be assumed to be user generated
   async updateAttributes(personAttributes) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, {
-      attributes: {
-        ...this.getPerson(this.identity.toPublicIdentity()).attributes,
-        ...personAttributes,
-      }
-    })
+    let updates = personAttributes
+    if (!Array.isArray(updates)) {
+      updates = Object.entries(updates).map(([key, value])=> 
+        [key.split('.'), value]
+      )
+    }
+    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, { updates })
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
   }
 
+  // get a person from their base64 publickey identity string
   getPerson(identity) {
     return this.people[identity]
   }
 
+  // leave this room
   async leave() {
     let message = { leave: true }
     // with keepalive so leave events work even if fired during page navigation events
@@ -79,7 +96,7 @@ class RoomClient extends EventEmitter {
   }
 
   // send a direct message to another user (i.e. for establishing a webrtc connection)
-  async dm(toIdentity, messageObject) {
+  async dm(toIdentity, message) {
     let response = await this.postJSON(uri`/rooms/${this.roomID}/send`, { ...message, to: toIdentity })
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
@@ -171,7 +188,14 @@ class RoomClient extends EventEmitter {
   _message_personChange(message) {
     let person = this.getPerson(message.identity)
     if (!person) return console.error(`Recieved personChange event from unknown person`, message)
-    Object.entries(message).forEach(([key, value])=> person[key] = value)
+    // for each update, resolve the path and overwrite the updated value
+    message.updates.forEach(([path, value])=> {
+      let object = person
+      let finalKey = path.pop()
+      path.forEach(key => object = object[key])
+      object[finalKey] = value
+    })
+
     this.emit('personChange', person)
     this.emit('peopleChange', this)
   }

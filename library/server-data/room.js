@@ -1,6 +1,16 @@
 // Server Side representation of a Room, which holds the shared append only log of events
 // and a current state, as well as meta information about architecture and stuff like that
 const SubscriptionLog = require('./subscription-log')
+const config = require('../../package.json').bathtub
+
+function updateObject(person, updates) {
+  updates.forEach(([path, value])=> {
+    let object = person
+    let finalKey = path.pop()
+    path.forEach(key => object = object[key])
+    object[finalKey] = value
+  })
+}
 
 class Room {
   constructor(config) {
@@ -36,8 +46,14 @@ class Room {
   personJoin(identity, personConfig) {
     // setup person object
     let person = {
+      attributes: {},
       ...personConfig,
-      identity
+      identity,
+      joined: Date.now(),
+    }
+
+    if (JSON.stringify(person).length > config.personObjectMaxSize) {
+      throw new Error("Person Object is too large!")
     }
 
     // append to log
@@ -51,9 +67,23 @@ class Room {
   }
 
   // person can be altered
-  personChange(identity, updateProps) {
-    if (!this.getPerson(identity)) throw new Error("This person isn't in the room")
-    this.log.append('personChange', { ...updateProps, identity })
+  personChange(identity, updates = []) {
+    let person = this.getPerson(identity)
+    if (!person) throw new Error("This person isn't in the room")
+
+    // test the update to verify person object doesn't get too big
+    let clone = JSON.parse(JSON.stringify(this.getPerson(person)))
+    updateObject(clone, updates)
+    if (JSON.stringify(clone).length > config.personObjectMaxSize) {
+      throw new Error("Person Object would grow too large! Cannot accept update")
+    }
+
+    this.log.append('personChange', { identity, updates })
+  }
+
+  // work out how large the person's object will be if some updates are applied
+  sizeOfPersonChange(identity, updates = []) {
+
   }
 
   // eventually remove person from room
@@ -91,7 +121,9 @@ class Room {
       // when a person updates their attributes, or metadata about a person like their privilages change, update that record
       let person = this.getPerson(data.identity)
       if (!person) throw new Error(`No person exists with public key identity string ${data.identity}`)
-      Object.entries(data).forEach(([key, value])=> person[key] = value)
+
+      // follow the path specified in each update entry and write over it's value
+      updateObject(person, data.updates)
 
     } else if (messageType == 'roomChange') {
       if (data.architecture) this.architecture = data.architecture

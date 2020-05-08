@@ -114,6 +114,7 @@ app.get('/:roomID/event-stream', requireSignature, (req, res) => {
 // user can request to leave the room
 app.post('/:roomID/leave', requireSignature, (req, res) => {
   let room = rooms[req.params.roomID]
+  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
   if (req.body.leave !== true) return res.status(500).send({ error: "Request body must include { leave: true } property" })
   try { room.personLeave(req.sig.identity) }
   catch (err) { return res.status(500).send({ error: err.message }) }
@@ -123,15 +124,17 @@ app.post('/:roomID/leave', requireSignature, (req, res) => {
 // user can request to update their attributes
 app.post('/:roomID/set-attributes', requireSignature, (req, res) => {
   let room = rooms[req.params.roomID]
+  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
   if (!room.getPerson(req.sig.identity)) return res.status(500).send({ error: "User is not in room, cannot update" })
   if (!req.body.attributes) return res.status(500).send({ error: "attributes property in body is not optional" })
-  room.personChange(req.sig.identity, { attributes: req.body.attributes })
+  room.personChange(req.sig.identity, [...req.body.updates].map(([path, value]) => [['attributes', ...path], value]))
   res.send({ ok: true })
 })
 
 // when a user sends a message to the room, publish that
 app.post('/:roomID/send', requireSignature, (req, res) => {
   let room = rooms[req.params.roomID]
+  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
   if (!room.getPerson(req.sig.identity)) return res.status(500).send({ error: "User is not in room, cannot send message" })
   room.send(req.sig.identity, req.body)
   res.send({ ok: true })
