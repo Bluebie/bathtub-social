@@ -38,7 +38,6 @@ class ChatLogComponent extends Nanocomponent {
     this.element.append(container)
 
     let d = this.fadeDuration
-    console.log("height", container.offsetHeight)
     container.style['margin-top'] = `${container.offsetHeight}px`
     container.style['opacity'] = '0.0'
     container.style['overflow'] = 'hidden'

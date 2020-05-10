@@ -28,24 +28,35 @@ html, body {
   color: hsl(var(--fg-hue) var(--fg-sat) var(--fg-lum));
 }
 
-/* css animation to playback a three or five frame filmstrip avatar */
-.filmstrip img {
-  width: 1em;
+/* css animation to playback a filmstrip in an avatar */
+.avatar {
+  --filmstrip-size: 64px;
+  --filmstrip-frames: 3;
+  --filmstrip-interval: 2s;
+
+  border-radius: calc(var(--filmstrip-size) / 2);
+  width: var(--filmstrip-size); height: var(--filmstrip-size);
+  overflow: hidden;
+  /* border: 3px solid hsl(var(--hue) 80% 60%); */
+  border: 3px solid transparent;
+  background-image: linear-gradient(to top,    hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%)),
+                    linear-gradient(to bottom, hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%));
+  background-origin: border-box;
+  background-clip: content-box, border-box;
+
+
+  transition: border-color var(--anim-duration) var(--anim-fn);
+}
+
+.avatar .filmstrip {
+  width: var(--filmstrip-size);
   margin-top: 0em;
   display: block;
+  /* TODO: consider if this animation should play slower on machines with Reduce Animation enabled */
+  animation: filmstripAnim var(--filmstrip-interval) steps(var(--filmstrip-frames), end) infinite;
 }
 
-@keyframes filmstrip1x3 { to { margin-top: -3em; } }
-.filmstrip.length3 img {
-  height: 3em;
-  animation: filmstrip1x3 1s steps(3, start) infinite;
-}
-
-@keyframes filmstrip1x5 { to { margin-top: -5em; } }
-.filmstrip.length5 img {
-  height: 5em;
-  animation: filmstrip1x5 1s steps(5, start) infinite;
-}
+@keyframes filmstripAnim { from { margin-top: 0 } to { margin-top: calc(var(--filmstrip-size) * var(--filmstrip-frames) * -1); } }
 
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {

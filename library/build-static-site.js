@@ -4,7 +4,7 @@ const zlib = require('zlib')
 const browserify = require('browserify')
 const beautify = require('js-beautify').html
 
-const DocumentTemplate = require('./views/html-document')
+const HTMLDocument = require('./views/html-document')
 const FrontendView = require('./views/view-frontend')
 
 const appRoot = require('app-root-path')
@@ -72,8 +72,7 @@ module.exports = async function() {
   await zipper(`${buildDir}/bundle.js`)
 
   // build frontend
-  let doc = new DocumentTemplate({ title: config.siteName })
-  await doc.setBody(new FrontendView())
+  let doc = new HTMLDocument(new FrontendView({}))
   await fs.writeFile(`${buildDir}/index.html`, beautify(doc.toHTML(), beautifyOptions))
   await zipper(`${buildDir}/index.html`)
 

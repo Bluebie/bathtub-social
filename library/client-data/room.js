@@ -16,7 +16,7 @@ require('isomorphic-fetch')
 class RoomClient extends EventEmitter {
   constructor({ roomID, architecture, identity }) {
     super()
-    this.identity = identity || new Identity()
+    this.identity = identity
     this.roomID = roomID
     this.architecture = architecture
     this.people = {}
@@ -25,6 +25,7 @@ class RoomClient extends EventEmitter {
   }
 
   async join(personAttributes = {}) {
+    if (!this.identity) this.identity = new Identity()
     if (!this.sse) {
       let ssePath = config.apiRoot + uri`/rooms/${this.roomID}/event-stream`
       let requestPath = this.identity.signedQueryString(ssePath, { attributes: personAttributes || {} })
@@ -66,6 +67,18 @@ class RoomClient extends EventEmitter {
     let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, { updates })
     if (response.error) throw new Error(response.error)
     else if (response.success) return true
+  }
+
+  async updateFilmstrip(filmstripImageBuffer) {
+    let apiPath = uri`/rooms/${this.roomID}/filmstrips`
+    let response = await this.identity.signedFetch(`${config.apiRoot}${apiPath}`, {
+      mode: 'same-origin',
+      cache: 'no-cache',
+      method: 'POST',
+      headers: { 'Content-Type': 'image/jpeg' },
+      body: filmstripImageBuffer,
+    })
+    return await response.json()
   }
 
   // get a person from their base64 publickey identity string

@@ -7,6 +7,7 @@
   "license": "ISC",
   "dependencies": {
     "app-root-path": "^3.0.0",
+    "blob-to-buffer": "^1.2.8",
     "body-parser": "^1.19.0",
     "browserify": "^16.5.1",
     "bytes": "^3.1.0",
@@ -63,7 +64,7 @@
     ],
     "filmstripSize": 64,
     "filmstripFrames": 3,
-    "filmstripMaxData": 131072,
+    "filmstripMaxData": 65536,
     "filmstripInterval": "2s",
     "personObjectMaxSize": "10000"
   }

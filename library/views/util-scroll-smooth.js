@@ -21,11 +21,8 @@ class Scroller {
   }
 
   start() {
-    //this.lastTick = Date.now()
-    console.log("Start scrolltop", this.startValue = this.target.scrollTop)
     this.remainders = [0, 0]
 
-    //this.target.addEventListener('scroll', this.onScroll)
     requestAnimationFrame((time) => {
       this.lastTime = time - (1000 / 60) // rough guess at what the difference would be
       this.tick(time)
@@ -44,10 +41,7 @@ class Scroller {
 
     this.target.scrollTop  += integers[0]
     this.target.scrollLeft += integers[1]
-    if (this.isFinished()) {
-      //this.target.removeEventListener('scroll', this.onScroll)
-      console.log("End scrollTop", this.target.scrollTop, "difference", this.target.scrollTop - this.startValue, "goal", this.direction)
-    } else {
+    if (!this.isFinished()) {
       requestAnimationFrame((time)=> this.tick(time))
     }
   }

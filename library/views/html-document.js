@@ -5,50 +5,27 @@ const { decache, pathURL } = require('./view-utils')
 const config = require('../../package.json').bathtub
 
 class DocumentTemplate {
-  constructor({ title, disable }) {
-    this.title = title
-    this.disable = disable || {}
-  }
-
-  async setBody(bodyProvider) {
-    await bodyProvider.load()
-    this.body = bodyProvider
+  constructor(body) {
+    this.body = body
   }
 
   toHeadHTML() {
-    let pieces = [
-      html`<title>${this.title}</title>`,
-      html`<meta charset="utf-8">`,
-      html`<link rel="stylesheet" href="${decache("style/sheet.css")}">`,
-      ...this.body.getHeadTags(),
-      html`<meta name="viewport" content="width=device-width">`,
-      //html`<link rel=icon type="image/png" sizes="32x32" href="${pathURL("style/favicon-32x32.png")}">`,
-    ]
-
-    // if the body provider wants to include some data, emit a BathtubData javascript object
-    let data = this.body.getData()
-    if (Object.keys(data).length > 0) {
-      pieces.push(html`<script>window.BathtubData = ${raw(JSON.stringify(data))}</script>`)
+    let viewConfig = {
+      view: this.body.constructor.name,
+      options: this.body.options,
     }
 
-    pieces.push(html`<script defer src="${decache("build/bundle.js")}"></script>`)
-
-    // allow page providers to override opengraph properties
-    let openGraph = {
-      ...this.openGraph,
-      ...this.body.getOpenGraph()
-    }
-
-    Object.entries(openGraph).map(([key, value]) =>
-      pieces.push(html`<meta property="og:${key}" content="${value}">`)
-    )
-    return html`<head>${pieces}</head>`
+    return html`<head>
+      <title>${this.body.title || config.siteName}</title>
+      <meta charset="utf-8">
+      <link rel=stylesheet href="${decache('style/sheet.css')}">
+      <meta name=viewport content="width=device-width">
+      <script defer src="${decache("build/bundle.js")}" id="bathtub-bundle" data-view="${JSON.stringify(viewConfig)}"></script>
+    </head>`
   }
 
   toBodyHTML() {
-    return html`<body class="${this.body.getPageType()}" data-json="${JSON.stringify(this.body.getData())}">
-      ${this.body.toHTML()}
-    </body>`
+    return this.body.render()
   }
 
   toHTML() {

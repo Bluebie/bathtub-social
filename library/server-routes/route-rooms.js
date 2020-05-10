@@ -28,13 +28,13 @@ app.get('/', (req, res) => res.send(Object.values(rooms).map(room => room.getPub
 app.get('/:roomID/', (req, res) => res.send(rooms[req.params.roomID].getPublicInfo()) )
 
 // render user interface
-app.get('/:roomID/text', async (req, res) => {
+app.get('/:roomID/text', (req, res) => {
   let room = rooms[req.params.roomID]
   if (!room) return res.status(404).send({ error: "specified room does not exist" })
 
-  let doc = new HTMLDocument({ title: `${room.humanName || room.roomID} - Development Text Chat` })
-  await doc.setBody(new TextRoomView(room.roomID))
-  res.send(doc.toHTML().toString())
+  //let doc = new HTMLDocument({ title: `${room.humanName || room.roomID} - Development Text Chat` })
+  let doc = new HTMLDocument(new TextRoomView({ roomID: room.roomID }))
+  res.send(`${doc.toHTML()}`)
 })
 
 // room EventSource stream, causes a join announce too
@@ -168,16 +168,17 @@ app.post('/:roomID/filmstrips', requireSignature, (req, res)=> {
 
   filmstripsData.set(person, req.body)
 
-  let filmstamp = Math.round((Date.now() - person.joined) / 250).toString(36)
-  room.personChange(person.identity, [["filmstamp"], filmstamp])
+  // filmstamp is a little cache invalidation thingie, which cycles between 0 and zz
+  let filmstamp = (Math.round((Date.now() - person.joined) / 250) % 1296).toString(36)
+  room.personChange(person.identity, [[["filmstamp"], filmstamp]])
 
-  req.send({ ok: true, filmstamp })
+  res.send({ ok: true, filmstamp })
 })
 
 app.get('/:roomID/filmstrips/:identity/:timestamp', (req, res)=> {
   let room = rooms[req.params.roomID]
   if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
-  let person = room.getPerson(req.sig.identity)
+  let person = room.getPerson(req.params.identity)
   if (!person) return res.status(404).send({ error: "Specified person identity doesn't exist in this room" })
 
   let data = filmstripsData.get(person)
