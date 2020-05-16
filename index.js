@@ -17,6 +17,7 @@ if (config.development) {
   })
   // serve live styles folder
   app.use('/style', express.static('./style'))
+  app.use('/configuration', express.static('./configuration'))
 
   // dynamically rebuild bundle on request for development
   app.get('/bundle.js', async (req,res)=> {

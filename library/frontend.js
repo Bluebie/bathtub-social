@@ -1,8 +1,7 @@
-const TextRoomView = require('./views/view-text-room')
-
 // all available frontend views
 const views = [
-  TextRoomView,
+  require('./views/view-text-room'),
+  require('./views/view-room'),
 ]
 
 window.bathtub = {}

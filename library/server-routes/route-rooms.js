@@ -10,11 +10,12 @@ const sizeOf = require('image-size')
 
 const HTMLDocument = require('../views/html-document')
 const TextRoomView = require('../views/view-text-room')
+const RoomView = require('../views/view-room')
 
 // load room configurations
 let rooms = {}
 fs.readdirSync(appRoot.resolve('configuration/rooms')).forEach(roomFilename => {
-  let roomConfig = JSON.parse(fs.readFileSync(appRoot.resolve(`configuration/rooms/${roomFilename}`)))
+  let roomConfig = fs.readJSONSync(appRoot.resolve(`configuration/rooms/${roomFilename}`))
   let room = new Room(roomConfig)
   rooms[roomConfig.roomID] = room
 })
@@ -28,12 +29,19 @@ app.get('/', (req, res) => res.send(Object.values(rooms).map(room => room.getPub
 app.get('/:roomID/', (req, res) => res.send(rooms[req.params.roomID].getPublicInfo()) )
 
 // render user interface
-app.get('/:roomID/text', (req, res) => {
+app.get('/:roomID/text-interface', (req, res) => {
   let room = rooms[req.params.roomID]
-  if (!room) return res.status(404).send({ error: "specified room does not exist" })
+  if (!room) return res.sendStatus(404)
 
-  //let doc = new HTMLDocument({ title: `${room.humanName || room.roomID} - Development Text Chat` })
   let doc = new HTMLDocument(new TextRoomView({ roomID: room.roomID }))
+  res.send(`${doc.toHTML()}`)
+})
+
+app.get('/:roomID/interface', (req, res) => {
+  let room = rooms[req.params.roomID]
+  if (!room) return res.sendStatus(404)
+
+  let doc = new HTMLDocument(new RoomView({ roomID: room.roomID }))
   res.send(`${doc.toHTML()}`)
 })
 
@@ -71,7 +79,7 @@ app.get('/:roomID/event-stream', requireSignature, (req, res) => {
       room.personJoin(req.sig.identity, { attributes: req.query.attributes })
     } catch (err) {
       console.error(err)
-      return res.status(429).send({ error: err.message })
+      return res.statusStatus(429)
     }
   }
 

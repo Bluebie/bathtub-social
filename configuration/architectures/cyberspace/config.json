@@ -1,0 +1,10 @@
+{
+  "layers": [
+    { "z": 0.0, "url": "background.jpg" }
+  ],
+  "@2x": false,
+  "@3x": false,
+  "pathfinding": "pathfinding.png",
+  "regionMap": "region-map.png",
+  "regions": {}
+}

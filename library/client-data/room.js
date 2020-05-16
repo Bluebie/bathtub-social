@@ -154,7 +154,13 @@ class RoomClient extends EventEmitter {
   // initial room state snapshot sets current state
   _message_roomState(message) {
     this.roomID = message.roomID
+    this.humanName = message.humanName
+    this.maxPeople = message.maxPeople
     this.architecture = message.architecture
+    this.architectureName = message.architectureName
+    this.architecturePath = config.apiRoot + uri`/configuration/architectures/${this.config.architectureName}`
+    this.links = message.links
+    
     // for any new or updated people, insert/update them in to the person object
     message.people.forEach(person => {
       if (this.people[person.identity]) {
@@ -176,7 +182,6 @@ class RoomClient extends EventEmitter {
       }
     })
 
-    this.maxPeople = message.maxPeople
     this.emit('peopleChange', this)
     this.emit('reloaded')
   }

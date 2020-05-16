@@ -3,13 +3,17 @@
 const SubscriptionLog = require('./subscription-log')
 const config = require('../../package.json').bathtub
 const updateObject = require('../functions/update-object')
+const fs = require('fs-extra')
 
 class Room {
   constructor(config) {
     this.roomID = config.roomID
-    this.architecture = config.architecture
+    this.architectureName = config.architecture
+    this.architecture = fs.readJSONSync(`../../configuration/architecture/${this.architectureName}/config.json`)
     this.people = {}
+    this.humanName = config.humanName
     this.maxPeople = config.maxPeople
+    this.links = config.links
     // setup append only subscribable log
     this.log = new SubscriptionLog({ expire: config.expire, maxSubscribers: this.maxPeople * 2 })
     this.log.on('append', (entry)=> this.processAppend(entry))
@@ -19,7 +23,7 @@ class Room {
   getPublicInfo() {
     return {
       roomID: this.roomID,
-      architecture: this.architecture,
+      humanName: this.humanName,
       maxPeople: this.maxPeople,
       headCount: Object.keys(this.people).length,
     }
@@ -29,9 +33,12 @@ class Room {
   getStateData() {
     return {
       roomID: this.roomID,
+      humanName: this.humanName,
       architecture: this.architecture,
+      architectureName: this.architectureName,
       people: Object.values(this.people),
       maxPeople: this.maxPeople,
+      links: this.links,
     }
   }
 
