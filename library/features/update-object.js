@@ -3,10 +3,17 @@
 
 module.exports = function updateObject(person, updates) {
   updates.forEach(([inputPath, value])=> {
+    // support for 'path.to.property' style input paths
+    if (typeof(inputPath) === 'string') inputPath = inputPath.split('.')
+    
     let path = [...inputPath]
     let object = person
     let finalKey = path.pop()
     path.forEach(key => object = object[key])
-    object[finalKey] = value
+    if (value !== undefined) {
+      object[finalKey] = value
+    } else {
+      delete object[finalKey]
+    }
   })
 }

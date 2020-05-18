@@ -7,7 +7,6 @@ class PresenceListComponent extends Nanocomponent {
   constructor({room, onClick} = {}) {
     super()
     this.room = room || { people: {} }
-    this.peopleJSON = null
     this.onClick = onClick || ((person) => { console.log("Presence Click:", person)})
     this.avatarMap = new WeakMap()
     this.peopleKeyCache = []

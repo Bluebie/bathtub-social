@@ -3,31 +3,40 @@ const html = require('nanohtml')
 const nanocomponent = require('nanocomponent')
 
 const TextComposer = require('./component-text-composer')
-const PresenceList = require('./component-presence-list')
+const VideoCrossbar = require('./component-video-crossbar')
+const LayerMap = require('./component-layer-map')
 const ChatLog = require('./component-chat-log')
 const RoomClient = require('../client-data/room')
 const HueRing = require('./widget-hue-ring')
 const AvatarCapture = require('./widget-avatar-capture')
 
-class TextRoomView extends nanocomponent {
+const bathtub = require('../../package.json').bathtub
+
+class RoomView extends nanocomponent {
   constructor(options) {
     super()
     this.options = options
 
     this.room = new RoomClient(options.roomStateData)
+    this.crossbar = new VideoCrossbar({ })
     this.messages = new ChatLog({ expires: '30s' })
-    this.presence = new PresenceList({ })
+    this.map = new LayerMap({ })
     this.composer = new TextComposer({ })
   }
 
+  get title() {
+    return `${this.room.humanName} — ${bathtub.siteName}`
+  }
+
   createElement() {
-    return html`<body class="text-room">
-      <div class="horizontal-flex">
-        <div class="vertical-flex">
+    return html`<body class="bathtub-room">
+      <div class="vertical-flex">
+        <div class="expand stack">
+          ${this.crossbar.render()}
+          ${this.map.render()}
           ${this.messages.render()}
-          ${this.composer.render()}
         </div>
-        ${this.presence.render()}
+        ${this.composer.render()}
       </div>
     </body>`
   }
@@ -55,11 +64,16 @@ class TextRoomView extends nanocomponent {
       this.room.text(text)
     }
 
-    // hook the presence list up to the room
-    this.presence.room = this.room // use the room as it's data source
-    // when the room has a peopleChange event, make sure to update any components that depend on people data
+    // hook up the layer map
+    this.map.room = this.room
+    this.room.on('roomChange', ()=> {
+      document.title = this.title
+      this.map.render()
+    })
+
+    // when people change their attributes, update anything that depends on that data
     this.room.on('peopleChange', ()=> {
-      this.presence.render()
+      this.map.render()
       this.messages.render()
     })
 
@@ -79,7 +93,7 @@ class TextRoomView extends nanocomponent {
     // join room
     this.room.join({
       hue: Math.round(Math.random() * 360),
-      x: Math.random(), y: Math.random(),
+      ... this.room.architecture.spawn,
     })
 
     // ask for webcam feed (depends on user permission)
@@ -101,17 +115,17 @@ class TextRoomView extends nanocomponent {
 
       // setup filmstrip builder, which watches webcam handmirror and saves frames in to the strip
       // and uploads each strip to the server when they're done
-      this.filmstrip = new AvatarCapture({
+      this.avatar = new AvatarCapture({
         source: this.handMirror,
-        onFilmstrip: (buffer) => {
-          this.room.updateFilmstrip(buffer)
+        onAvatar: (buffer) => {
+          this.room.uploadAvatar(buffer)
         }
       })
-      this.filmstrip.enable()
+      this.avatar.enable()
     } else {
       console.log("no webcam??")
     }
   }
 }
 
-module.exports = TextRoomView
+module.exports = RoomView
