@@ -1,8 +1,5 @@
 {
-  "layers": [
-    { "z": 0.5, "url": "table.png" },
-    { "z": 0.0, "url": "background.png" }
-  ],
+  "layers": [],
   "@2x": true,
   "@3x": true,
   "pathfinding": "pathfinding.png",

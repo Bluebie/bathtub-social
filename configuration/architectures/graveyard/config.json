@@ -1,13 +1,18 @@
 {
   "layers": [
-    { "z": 0.25, "url": "Wall Fragment 1.png" },
-    { "z": 0.78, "url": "Fenced Right.png" },
-    { "z": 0.75, "url": "Fenced Left.png" },
-    { "z": 0.0, "url": "background.png" }
+    { "z": 0.0,    "url": "background.png" },
+    { "z": 0.2560, "url": "Trumpet.png",            "x": 0.33,    "y": 0.33   },
+    { "z": 0.6888, "url": "fence-fragment-1.png",   "x": 0.401,   "y": 0.857  },
+    { "z": 0.4222, "url": "fence-left-corner.png",  "x": 0.0302,  "y": 0.517  },
+    { "z": 0.2900, "url": "Tree.png",               "x": 0.48,    "y": 0.38   }
   ],
   "regionMap": "region-map.png",
+  "pathfinding": "pathfinding.png",
+  "@2x": false,
+  "@3x": false,
   "regions": {
     "exit": "#FF0000",
     "wall": "#00FF00"
-  }
+  },
+  "spawn": {"x": 0.239, "y": 0.3532}
 }

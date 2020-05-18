@@ -2,9 +2,13 @@
   "layers": [
     { "z": 0.0, "url": "background.jpg" }
   ],
+  "avatarScale": 0.75,
+  "avatarFarScale": 0.33,
+  "avatarReferenceWidth": 1400,
   "@2x": false,
   "@3x": false,
   "pathfinding": "pathfinding.png",
   "regionMap": "region-map.png",
-  "regions": {}
+  "regions": {},
+  "spawn": { "x": 0.2, "y": 0.5 }
 }
