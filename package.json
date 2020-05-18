@@ -19,6 +19,7 @@
     "express-reload": "^1.2.0",
     "fs-extra": "^9.0.0",
     "image-size": "^0.8.3",
+    "inline-style": "^2.0.0",
     "isomorphic-fetch": "^2.2.1",
     "js-beautify": "^1.11.0",
     "mouse-event-offset": "^3.0.2",
@@ -28,6 +29,7 @@
     "p-queue": "^6.3.0",
     "parse-duration": "^0.1.2",
     "pathfinding": "^0.4.18",
+    "resize-event": "^1.2.1",
     "sheetify": "^8.0.0",
     "simple-peer": "^9.6.2",
     "sse-writer": "^3.0.4",
@@ -62,10 +64,11 @@
     "stunServers": [
       "stun:stun.l.google.com:19302"
     ],
-    "filmstripSize": 64,
-    "filmstripFrames": 3,
-    "filmstripMaxData": 65536,
-    "filmstripInterval": "2s",
-    "personObjectMaxSize": "10000"
+    "avatarSize": 128,
+    "avatarMaxData": 32768,
+    "avatarQuality": 0.6,
+    "avatarMimeType": "image/jpeg",
+    "avatarInterval": "1s",
+    "personObjectMaxSize": 60000
   }
 }

@@ -1,7 +1,7 @@
 const EventEmitter = require('events')
 const Identity = require('../crypto/identity')
 const uri = require('encodeuricomponent-tag') // uri encodes template literals
-const updateObject = require('../functions/update-object')
+const updateObject = require('../features/update-object')
 const config = require('../../package.json').bathtub
 // ensure fetch is available
 require('isomorphic-fetch')
@@ -14,16 +14,21 @@ require('isomorphic-fetch')
 // - peopleChange - fires whenever anything about the people list updates, passing this object
 // - p2p - fires when you recieve a direct message from another users
 class RoomClient extends EventEmitter {
-  constructor({ roomID, architecture, identity }) {
+  constructor(init) {
     super()
-    this.identity = identity
-    this.roomID = roomID
-    this.architecture = architecture
+    this.identity = init.identity
+    this.roomID = init.roomID
+    this.humanName = init.humanName
+    this.architecture = init.architecture
+    this.architectureName = init.architectureName
+    this.architecturePath = config.apiRoot + uri`/configuration/architectures/${this.architectureName}`
     this.people = {}
-    this.maxPeople = null
+    this.maxPeople = init.maxPeople
+    this.links = init.links
     this.sse = null
   }
 
+  // join the room, connecting the event source, with optional initial attributes values
   async join(personAttributes = {}) {
     if (!this.identity) this.identity = new Identity()
     if (!this.sse) {
@@ -33,7 +38,6 @@ class RoomClient extends EventEmitter {
       this.sse = new EventSource(requestPath)
       this.sse.onmessage = ({data}) => {
         let message = JSON.parse(data)
-        console.log("SSE", message)
         if (this[`_message_${message.messageType}`]) {
           this[`_message_${message.messageType}`](message.data)
         } else {
@@ -69,14 +73,15 @@ class RoomClient extends EventEmitter {
     else if (response.success) return true
   }
 
-  async updateFilmstrip(filmstripImageBuffer) {
-    let apiPath = uri`/rooms/${this.roomID}/filmstrips`
+  // upload an avatar
+  async uploadAvatar(avatarBuffer) {
+    let apiPath = uri`/rooms/${this.roomID}/avatar`
     let response = await this.identity.signedFetch(`${config.apiRoot}${apiPath}`, {
       mode: 'same-origin',
       cache: 'no-cache',
       method: 'POST',
       headers: { 'Content-Type': 'image/jpeg' },
-      body: filmstripImageBuffer,
+      body: avatarBuffer,
     })
     return await response.json()
   }
@@ -86,8 +91,13 @@ class RoomClient extends EventEmitter {
     return this.people[identity]
   }
 
+  // returns your own person from the people collection
+  get myself() { return this.getPerson(this.identity.base64.publicKey) }
+
   // leave this room
   async leave() {
+    this.sse.close() // stop the eventstream
+
     let message = { leave: true }
     // with keepalive so leave events work even if fired during page navigation events
     let response = await this.postJSON(uri`/rooms/${this.roomID}/leave`, message, { keepalive: true })
@@ -158,7 +168,7 @@ class RoomClient extends EventEmitter {
     this.maxPeople = message.maxPeople
     this.architecture = message.architecture
     this.architectureName = message.architectureName
-    this.architecturePath = config.apiRoot + uri`/configuration/architectures/${this.config.architectureName}`
+    this.architecturePath = config.apiRoot + uri`/configuration/architectures/${this.architectureName}`
     this.links = message.links
     
     // for any new or updated people, insert/update them in to the person object

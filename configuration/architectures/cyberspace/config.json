@@ -4,7 +4,6 @@
   ],
   "avatarScale": 0.75,
   "avatarFarScale": 0.33,
-  "avatarReferenceWidth": 1400,
   "@2x": false,
   "@3x": false,
   "pathfinding": "pathfinding.png",

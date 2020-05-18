@@ -33,7 +33,7 @@ app.get('/:roomID/text-interface', (req, res) => {
   let room = rooms[req.params.roomID]
   if (!room) return res.sendStatus(404)
 
-  let doc = new HTMLDocument(new TextRoomView({ roomID: room.roomID }))
+  let doc = new HTMLDocument(new TextRoomView({ roomStateData: room.getStateData() }))
   res.send(`${doc.toHTML()}`)
 })
 
@@ -41,7 +41,7 @@ app.get('/:roomID/interface', (req, res) => {
   let room = rooms[req.params.roomID]
   if (!room) return res.sendStatus(404)
 
-  let doc = new HTMLDocument(new RoomView({ roomID: room.roomID }))
+  let doc = new HTMLDocument(new RoomView({ roomStateData: room.getStateData() }))
   res.send(`${doc.toHTML()}`)
 })
 
@@ -88,7 +88,7 @@ app.get('/:roomID/event-stream', requireSignature, (req, res) => {
 
   // when user disconnects, clean up events
   req.on('aborted', () => {
-    console.log("Aborted", req.sig.identity)
+    console.info("Aborted", req.sig.identity)
     room.log.off('append', append)
     // if the user is still in the presence list, remove them after a timeout
     userTimeouts.set(person, setTimeout(() => {
@@ -152,50 +152,46 @@ app.post('/:roomID/send', requireSignature, (req, res) => {
   res.send({ ok: true })
 })
 
-
-// filmstrip RAM storage
-let filmstripsData = new WeakMap()
-let filmstripInterval = parseDuration(config.filmstripInterval)
-let filmstripExpires = filmstripInterval * 4
-// upload a filmstrip to server memory
-app.post('/:roomID/filmstrips', requireSignature, (req, res)=> {
+// upload an avatar to user's object as a data uri, streamed out over event streams
+app.post('/:roomID/avatar', requireSignature, (req, res)=> {
   let room = rooms[req.params.roomID]
   if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
   let person = room.getPerson(req.sig.identity)
-  if (!person) return res.status(500).send({ error: "You are not in this room, you can't publish a filmstrip yet" })
-  if (req.get('Content-Type') != "image/jpeg") return res.status(500).send({ error: "Post body must be a JPEG" })
+  if (!person) return res.status(500).send({ error: "You are not in this room, you can't publish an avatar yet" })
+  if (req.get('Content-Type') != config.avatarMimeType) return res.status(500).send({ error: "Post body must be a JPEG" })
 
   if (!Buffer.isBuffer(req.body)) return res.status(500).send({ error: "Image data didn't arrive as a buffer??" })
-  if (req.body.byteLength > config.filmstripMaxData) return res.status(500).send({ error: "Image data is too large in bytes" })
-  if (req.body.byteLength < 16) return res.status(500).send({ error: "Image data is too small in bytes" })
+  if (req.body.byteLength > config.avatarMaxData) return res.status(500).send({ error: "Image data is too large in bytes" })
+  if (req.body.byteLength < 8) return res.status(500).send({ error: "Image data is too small in bytes" })
   
   let size = sizeOf(req.body)
-  if (size.width != config.filmstripSize) return res.status(500).send({ error: "Filmstrip width is incorrect" })
-  if (size.height != config.filmstripSize * config.filmstripFrames) return res.status(500).send({ error: "Filmstrip height is incorrect" })
-  if (size.type != 'jpg') return res.status(500).send({ error: "File data does not look like JPEG" })
+  if (size.width != config.avatarSize) return res.status(500).send({ error: "Avatar width is incorrect" })
+  if (size.height != config.avatarSize) return res.status(500).send({ error: "Avatar height is incorrect" })
+  if (`image/${size.type.replace('jpg', 'jpeg')}` != config.avatarMimeType) return res.status(500).send({ error: "File data does not look like JPEG" })
 
-  filmstripsData.set(person, req.body)
+  // it all validates, so we can let the client know it's accepted now
+  res.send({ ok: true })
 
-  // filmstamp is a little cache invalidation thingie, which cycles between 0 and zz
-  let filmstamp = (Math.round((Date.now() - person.joined) / 250) % 1296).toString(36)
-  room.personChange(person.identity, [[["filmstamp"], filmstamp]])
+  // encode JPEG to a data uri
+  let datauri = `data:${req.get('Content-Type')};base64,${encodeURIComponent(req.body.toString('base64'))}`
 
-  res.send({ ok: true, filmstamp })
-})
-
-app.get('/:roomID/filmstrips/:identity/:timestamp', (req, res)=> {
-  let room = rooms[req.params.roomID]
-  if (!room) return res.status(500).send({ error: "Specified room doesn't exist" })
-  let person = room.getPerson(req.params.identity)
-  if (!person) return res.status(404).send({ error: "Specified person identity doesn't exist in this room" })
-
-  let data = filmstripsData.get(person)
-  if (data) {
-    res.set('Content-Type', 'image/jpeg')
-    res.set('Cache-Control', `max-age=${Math.ceil(filmstripExpires / 1000)}`)
-    res.send(data)
-  } else {
-    res.status(404).send({ error: "No filmstrip data available for this user" })
+  // setup a change log to apply efficiently
+  let changes = []
+  // add any missing structure or values
+  if (person.avatar === undefined)
+    changes.push(['avatar', {}])
+  if (person.avatar.width !== size.width)
+    changes.push(['avatar.width', size.width])
+  if (person.avatar.height !== size.height)
+    changes.push(['avatar.height', size.height])
+  if (person.avatar.type !== req.get('Content-Type'))
+    changes.push(['avatar.type', req.get('Content-Type')])
+  if (person.avatar.src !== datauri)
+    changes.push(['avatar.src', datauri])
+  
+  if (changes.length > 0) { // we have something to update! timestamp it and send it out to the subscribers
+    changes.push(['avatar.timestamp', Date.now()])
+    room.personChange(person.identity, changes)
   }
 })
 

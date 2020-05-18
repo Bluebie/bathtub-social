@@ -1,15 +1,17 @@
 // Server Side representation of a Room, which holds the shared append only log of events
 // and a current state, as well as meta information about architecture and stuff like that
+const appRoot = require('app-root-path')
 const SubscriptionLog = require('./subscription-log')
 const config = require('../../package.json').bathtub
-const updateObject = require('../functions/update-object')
+const updateObject = require('../features/update-object')
 const fs = require('fs-extra')
+const imageSize = require('image-size')
 
 class Room {
   constructor(config) {
     this.roomID = config.roomID
     this.architectureName = config.architecture
-    this.architecture = fs.readJSONSync(`../../configuration/architecture/${this.architectureName}/config.json`)
+    this.architecture = fs.readJSONSync(appRoot.resolve(`/configuration/architectures/${this.architectureName}/config.json`))
     this.people = {}
     this.humanName = config.humanName
     this.maxPeople = config.maxPeople
@@ -17,6 +19,14 @@ class Room {
     // setup append only subscribable log
     this.log = new SubscriptionLog({ expire: config.expire, maxSubscribers: this.maxPeople * 2 })
     this.log.on('append', (entry)=> this.processAppend(entry))
+
+    // augment architecture with image sizes on layers
+    if (this.architecture.layers) {
+      this.architecture.layers.forEach(layer => {
+        let info = imageSize(appRoot.resolve(`/configuration/architectures/${this.architectureName}/${layer.url}`))
+        layer.info = info
+      })
+    }
   }
 
   // returns public stats and info about the room, for inclusion in room listings
@@ -48,6 +58,7 @@ class Room {
       attributes: {},
       ...personConfig,
       identity,
+      avatar: {},
       joined: Date.now(),
     }
 

@@ -8,6 +8,7 @@
   ],
   "regionMap": "region-map.png",
   "pathfinding": "pathfinding.png",
+  "avatarScale": 0.75,
   "@2x": false,
   "@3x": false,
   "regions": {

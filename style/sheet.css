@@ -30,33 +30,39 @@ html, body {
 
 /* css animation to playback a filmstrip in an avatar */
 .avatar {
-  --filmstrip-size: 64px;
-  --filmstrip-frames: 3;
-  --filmstrip-interval: 2s;
+  --scale: 1.0;
+  --border-width: calc(4px * var(--scale));
+  --size: calc((64px * var(--scale)));
+  border-radius: calc((var(--size) / 2) + var(--border-width));
+  width: var(--size);
+  height: var(--size);
 
-  border-radius: calc(var(--filmstrip-size) / 2);
-  width: var(--filmstrip-size); height: var(--filmstrip-size);
-  overflow: hidden;
-  /* border: 3px solid hsl(var(--hue) 80% 60%); */
-  border: 3px solid transparent;
+  border: var(--border-width) solid transparent;
   background-image: linear-gradient(to top,    hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%)),
                     linear-gradient(to bottom, hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%));
   background-origin: border-box;
   background-clip: content-box, border-box;
-
+  box-sizing: border-box;
 
   transition: border-color var(--anim-duration) var(--anim-fn);
 }
 
-.avatar .filmstrip {
-  width: var(--filmstrip-size);
-  margin-top: 0em;
+.avatar .image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
   display: block;
-  /* TODO: consider if this animation should play slower on machines with Reduce Animation enabled */
-  animation: filmstripAnim var(--filmstrip-interval) steps(var(--filmstrip-frames), end) infinite;
+  
 }
 
-@keyframes filmstripAnim { from { margin-top: 0 } to { margin-top: calc(var(--filmstrip-size) * var(--filmstrip-frames) * -1); } }
+.avatar .decoration {
+  position: absolute;
+  width: calc(var(--size) * 2);
+  height: calc(var(--size) * 2);
+  margin-left: calc((var(--size) * -0.5) - var(--border-width));
+  margin-top: calc((var(--size) * -0.5) - var(--border-width));
+  top: 0; left: 0;
+}
 
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {
@@ -117,23 +123,20 @@ html, body {
 
 
 /* development testing text-room styling */
-.text-room-container {
-  display: flex;
-}
-
 .chat-log {
-  position: absolute;
-  top: 0; left: 0; right: 20em; bottom: 2em;
-  box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%);
+  flex-grow: 100;
+  /* box-shadow: inset 1px 8px 30px -7px hsla(0deg, 0%, 0%, 50%); */
   overflow-x: scroll;
   padding-top: 2ex;
   padding-left: 1ex;
   padding-right: 1ex;
+  pointer-events: none; /* don't capture clicks on me */
+  z-index: 100000;
 }
 
 .presence-list {
-  position: absolute;
-  top: 0; width: 20em; right: 0; bottom: 0;
+  width: 20em;
+  flex-grow: 0;
   padding: 1ex;
   box-sizing: border-box;
   overflow-x: scroll;
@@ -147,9 +150,73 @@ html, body {
 
 .text-composer {
   display: flex;
-  position: absolute;
-  height: 2em; left: 0; right: 20em; bottom: 0;
+  height: 2em;
 }
 
 .text-composer * { margin: 0.5ex; }
 .text-composer input[type=text] { flex-grow: 1; margin-right: 0; background-color: inherit; color: inherit; }
+
+
+.layer-map {
+  overflow-y: scroll;
+  position: relative;
+}
+
+.layer-map > .layers {
+  width: var(--layers-width);
+  height: var(--layers-height);
+}
+
+.layer-map > .layers > img.layer {
+  position: absolute;
+  pointer-events: none; /* don't capture clicks, let them through to the container */
+}
+
+.layer-map .avatar {
+  position: absolute;
+  margin-left: calc(var(--size) * -0.5);
+  margin-top: calc(var(--size) * -1.0);
+  transition:
+    top var(--anim-duration) var(--anim-fn),
+    left var(--anim-duration) var(--anim-fn),
+    width var(--anim-duration) var(--anim-fn),
+    height var(--anim-duration) var(--anim-fn),
+    z-index var(--anim-duration) var(--anim-fn),
+    margin var(--anim-duration) var(--anim-fn),
+    border-color var(--anim-duration) var(--anim-fn),
+    border-width var(--anim-duration) var(--anim-fn);
+}
+
+.layer-map .avatar .image {
+  transition:
+    width var(--anim-duration) var(--anim-fn),
+    height var(--anim-duration) var(--anim-fn);
+}
+
+.layer-map .avatar .decoration {
+  transition:
+    width var(--anim-duration) var(--anim-fn),
+    height var(--anim-duration) var(--anim-fn),
+    margin var(--anim-duration) var(--anim-fn);
+}
+
+body.bathtub-room { height: 100vh; padding: 0; margin: 0; overflow: hidden; }
+
+.vertical-flex {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.horizontal-flex {
+  display: flex;
+  flex-direction: horizontal;
+  height: 100%;
+}
+
+.horizontal-flex > .expand, .vertical-flex > .expand {
+  flex-grow: 100;
+}
+
+.stack { position: relative; height: 100%; width: 100%; overflow: hidden; }
+.stack > * { position: absolute; height: 100%; width: 100%; }

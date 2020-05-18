@@ -12,7 +12,7 @@ app.disable('x-powered-by') // lets not waste that bandwidth
 if (config.development) {
   // logger
   app.use((req, res, next) => {
-    console.log(req.method + ': ' + req.originalUrl)
+    console.info(req.method + ': ' + req.originalUrl)
     next()
   })
   // serve live styles folder
