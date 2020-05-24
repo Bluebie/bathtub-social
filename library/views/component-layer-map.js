@@ -5,7 +5,7 @@ const uri = require('encodeuricomponent-tag') // uri encodes template literals
 const mouseOffset = require('mouse-event-offset')
 const PF = require('pathfinding')
 const StyleObject = require('../features/style-object')
-const bathtubConfig = require('../../package.json').bathtub
+const deepEql = require('deep-eql')
 
 const Avatar = require('./component-avatar')
 const pathfindingGridFromImage = require('../features/pathfinding-grid-from-image')
@@ -26,11 +26,17 @@ class MapLayer extends nanocomponent {
     return this.room.architecture.layers[this.layerIndex]
   }
 
-  get x() { return this.config.x === undefined ? 0.5 : this.config.x }
-  get y() { return this.config.y === undefined ? 1.0 : this.config.y }
-  get width() { return this.config.info.width * this.map.scale }
-  get height() { return this.config.info.height * this.map.scale }
-  get stateKey() { return JSON.stringify([this.map.getViewport(), this.config]) }
+  // returns an object with all the input data that's relevent to rendering this layer
+  get inputs() {
+    return {
+      url: this.config.url,
+      x: this.config.x === undefined ? 0.5 : this.config.x,
+      y: this.config.y === undefined ? 1.0 : this.config.y,
+      width: this.config.info.width * this.map.scale,
+      height: this.config.info.height * this.map.scale,
+      viewport: this.map.getViewport(),
+    }
+  }
 
   assetURL(filename) {
     return this.room.architecturePath + uri`/${filename}`
@@ -38,21 +44,21 @@ class MapLayer extends nanocomponent {
 
   createElement() {
     this.cacheKey = this.stateKey
+    let { url, x, y, width, height, viewport } = this.renderedInputs = this.inputs
     
     // update location
-    let viewport = this.map.getViewport()
-    this.style.left = `${(this.x * viewport.width) - (this.width / 2)}px`
-    this.style.top = `${(this.y * viewport.height) - this.height}px`
-    this.style.width = `${this.width}px`
-    this.style.height = `${this.height}px`
+    this.style.left = `${(x * viewport.width) - (width / 2)}px`
+    this.style.top = `${(y * viewport.height) - height}px`
+    this.style.width = `${width}px`
+    this.style.height = `${height}px`
 
     // render html
-    return html`<img class="layer" src="${this.assetURL(this.config.url)}" style="${this.style}">`
+    return html`<img class="layer" src="${this.assetURL(url)}" style="${this.style}">`
   }
 
   // update if the viewport changed size, or if the architecture was changed by the server
   update() {
-    return (this.cacheKey != this.stateKey)
+    return !deepEql(this.inputs, this.renderedInputs)
   }
 }
 
@@ -216,32 +222,12 @@ class LayerMapComponent extends nanocomponent {
     return people.map(person => this.avatarForPerson(person))
   }
 
-  // createLayerElement(config) {
-  //   let src = this.room.architecturePath + uri`/${config.url}`
-  //   let srcSet = [src]
-  //   let regexp = /\.(jpg|jpeg|png|gif|webp|jp2|mp4|mkv|webm)$/i
-  //   if (this.room.architecture["@2x"]) srcSet.push(src.replace(regexp, `${encodeURIComponent('@2x')}.$1 2x`))
-  //   if (this.room.architecture["@3x"]) srcSet.push(src.replace(regexp, `${encodeURIComponent('@3x')}.$1 3x`))
-
-  //   let pixelScale = this.getPixelScale()
-  //   let canvasSize = this.getCanvasSize()
-
-  //   let style = {
-  //     zIndex: this.zScale(config.z),
-  //     left: `${(config.x || 0) * (canvasSize.width - (config.info.width * pixelScale))}px`,
-  //     top: `${(config.y || 0) * (canvasSize.height - (config.info.height * pixelScale))}px`,
-  //     width: `${Math.round(config.info.width * pixelScale)}px`,
-  //     height: `${Math.round(config.info.height * pixelScale)}px`,
-  //   }
-    
-  //   return html`<img class="layer" src="${src}" srcset="${srcSet.join(',\n')}" style="${inlineStyle(style)}">`
-  // }
-
   // create HTML element that will morph in to presence list containing all the avatars
   createElement() {
     let viewport = this.getViewport()
     this.viewportStyle.width = `${viewport.width}px`
     this.viewportStyle.height = `${viewport.height}px`
+    this.renderedViewport = viewport
 
     return html`<div class="layer-map" onclick=${this.handleClick} style="${this.style}">
       <div class="layer-viewport" style="${this.viewportStyle}">
@@ -253,36 +239,20 @@ class LayerMapComponent extends nanocomponent {
 
   // only do updates at this level when the members in the room change
   update() {
-    return true
-
-    // if the architecture changed, rerender
-    if (this._renderedArchtectureName != this.room.architectureName) {
-      this._renderedArchtectureName = this.room.architectureName
-      return true
-    }
-
-    let peopleKeys = Object.keys(this.room.people)
-    let peopleChanged = peopleKeys.some((value, index) => this.peopleKeyCache[index] != value)
-    this.peopleKeyCache = peopleKeys
-
-    // if anyone's left or joined, rerender presence list
-    if (peopleChanged) {
-      return true
-    } else { // otherwise, just ask the avatars to consider rerendering in place
-      Object.values(this.room.people).forEach(person => this.renderAvatarWithStyles(this.avatarForPerson(person)))
-      return false
-    }
+    return this.layers.some(layer => layer.update())
+        || this.avatars.some(avatar => avatar.update())
+        || !deepEql(this.renderedViewport, this.getViewport())
   }
 
   // rerender when element is added to document, as it now has a size and things need to rescale
   load() {
-    this.rerender()
-    document.addEventListener('resize', this._resizeListener = ()=> { this.rerender() })
+    this.render()
+    document.addEventListener('resize', this.resizeListener = ()=> { this.render() })
   }
 
   unload() {
     if (this._resizeListener) {
-      document.removeEventListener('resize', this._resizeListener)
+      document.removeEventListener('resize', this.resizeListener)
     }
   }
 }

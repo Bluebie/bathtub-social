@@ -4,8 +4,7 @@ const uri = require('encodeuricomponent-tag') // uri encodes template literals
 const nanocomponent = require('nanocomponent')
 const html = require('nanohtml')
 const StyleObject = require('../features/style-object')
-
-const config = require('../../package.json').bathtub
+const deepEql = require('deep-eql')
 
 function avatarDecoration(decorationName) {
   let url = (filename)=> uri`/style/avatar-decorations/${filename}`
@@ -19,13 +18,18 @@ function avatarDecoration(decorationName) {
 }
 
 class AvatarComponent extends nanocomponent {
-  constructor({ room, person, onClick } = {}) {
+  constructor({ person, onClick, style } = {}) {
     super()
-    this.room = room
     this.person = person
-    this.style = new StyleObject
+    this.style = new StyleObject(style)
     this.onClick = onClick
     this.handleClick = this.handleClick.bind(this)
+  }
+
+  // returns an object with every important piece of information used by this component, for element cache invalidation
+  get inputs() {
+    let { hue, x, y, authority, decoration } = this.person.attributes
+    return { hue, x, y, authority, decoration, webcam: this.person.avatar }
   }
 
   handleClick(event) {
@@ -33,27 +37,30 @@ class AvatarComponent extends nanocomponent {
   }
 
   createElement() {
-    let { hue, x, y, decoration } = this.person.attributes
+    let { hue, x, y, authority, decoration, webcam } = this.lastRenderInputs = this.inputs
     this.style.setVariables({ hue, x, y })
-    this.cacheKey = [hue, x, y, decoration, this.person.avatar.timestamp]
 
     let elements = []
     if (this.person.avatar !== undefined && this.person.avatar.src !== undefined) {
-      elements.push(html`<img class="image" src="${this.person.avatar.src}" width="${this.person.avatar.width}" height="${this.person.avatar.height}">`)
+      elements.push(html`<img class="image" src="${webcam.src}" width="${webcam.width}" height="${webcam.height}">`)
     } else {
       elements.push(html`<span class="image awaiting-image"></span>`)
     }
 
-    if (this.person.attributes.decoration) {
-      elements.push(avatarDecoration(this.person.attributes.decoration))
+    if (decoration && !decoration.match(/Admin/i)) {
+      elements.push(avatarDecoration(decoration))
+    }
+
+    if (authority == 'Admin') {
+      elements.push(avatarDecoration('Admin Swoops'))
     }
 
     return html`<div class="avatar" style="${this.style}">${elements}</div>`
   }
 
+  // update when the inputs changed
   update() {
-    let { hue, x, y, decoration } = this.person.attributes
-    return [hue, x, y, decoration, this.person.avatar.timestamp].some((value, index) => this.cacheKey[index] != value)
+    return !deepEql(this.state, this.lastRenderInputs)
   }
 }
 
