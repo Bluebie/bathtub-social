@@ -42,8 +42,8 @@ class AvatarComponent extends nanocomponent {
   }
 
   createElement() {
-    let { hue, x, y, authority, decoration, isMyself, webcam } = this.lastRenderInputs = this.inputs
-    this.style.setVariables({ hue, x, y })
+    let { hue, authority, decoration, isMyself, webcam } = this.lastRenderInputs = this.inputs
+    this.style.setVariables({ hue })
 
     let classList = ['avatar']
     if (isMyself) classList.push('myself')
