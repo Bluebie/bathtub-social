@@ -20,9 +20,11 @@ class StyleObject {
 
   toString() {
     let entries = Object.entries(this)
-    let calculated = entries.map(([key, value])=> 
-      [key, typeof(value) == 'function' ? value() : value]
-    )
+    let calculated = entries.map(([key, value])=> {
+      if (typeof(value) == 'function') value = value()
+      if (Array.isArray(value)) value = value.filter(x => x !== null).join(', ')
+      return [key, value]
+    }).filter(([key, value])=> value !== undefined && value !== null)
     return inlineStyle(Object.fromEntries(calculated))
   }
 }
