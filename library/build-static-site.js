@@ -60,6 +60,11 @@ module.exports = async function() {
   await fs.copy(appRoot.resolve('style'), `${buildDir}/style`, { preserveTimestamps: true })
   await recursiveZip(`${buildDir}/style`)
 
+  // copy in library and zip
+  await fs.emptyDir(`${buildDir}/library`)
+  await fs.copy(appRoot.resolve('library'), `${buildDir}/library`, { preserveTimestamps: true })
+  await recursiveZip(`${buildDir}/library`)
+
   // build frontend javascript
   await (new Promise((resolve, reject) => {
     var b = browserify()
