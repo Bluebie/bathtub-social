@@ -176,28 +176,7 @@ html, body {
   position: absolute;
   margin-left: calc(var(--size) * -0.5);
   margin-top: calc(var(--size) * -1.0);
-  transition:
-    top var(--anim-duration) var(--anim-fn),
-    left var(--anim-duration) var(--anim-fn),
-    width var(--anim-duration) var(--anim-fn),
-    height var(--anim-duration) var(--anim-fn),
-    z-index var(--anim-duration) var(--anim-fn),
-    margin var(--anim-duration) var(--anim-fn),
-    border-color var(--anim-duration) var(--anim-fn),
-    border-width var(--anim-duration) var(--anim-fn);
-}
-
-.layer-map .avatar .image {
-  transition:
-    width var(--anim-duration) var(--anim-fn),
-    height var(--anim-duration) var(--anim-fn);
-}
-
-.layer-map .avatar .decoration {
-  transition:
-    width var(--anim-duration) var(--anim-fn),
-    height var(--anim-duration) var(--anim-fn),
-    margin var(--anim-duration) var(--anim-fn);
+  transition: all var(--anim-duration) var(--anim-fn);
 }
 
 body.bathtub-room { height: 100vh; padding: 0; margin: 0; overflow: hidden; }
