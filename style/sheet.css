@@ -36,7 +36,7 @@ html, body {
   border-radius: 35px;
   width: 64px;
   height: 64px;
-  transform: scale(var(--scale)) translateY(calc(64px * (1.0 - (var(--scale)))));
+  /* transform: scale(var(--scale)) translateY(calc(64px * (1.0 - (var(--scale))))); */
 
   border: 3px solid transparent;
   background-image: linear-gradient(to top,    hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%)),
@@ -180,7 +180,7 @@ html, body {
   position: absolute;
   margin-left: calc(var(--size) * -0.5);
   margin-top: calc(var(--size) * -1.0);
-  transition: all var(--anim-duration) var(--anim-fn);
+  /* transition: all var(--anim-duration) var(--anim-fn); */
 }
 
 body.bathtub-room { height: 100vh; padding: 0; margin: 0; overflow: hidden; }

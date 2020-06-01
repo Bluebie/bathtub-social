@@ -6,6 +6,7 @@ const mouseOffset = require('mouse-event-offset')
 const PF = require('pathfinding')
 const StyleObject = require('../features/style-object')
 const deepEql = require('deep-eql')
+const parseDuration = require('parse-duration')
 
 const Avatar = require('./component-avatar')
 const pathfindingGridFromImage = require('../features/pathfinding-grid-from-image')
@@ -87,7 +88,7 @@ class LayerMapComponent extends nanocomponent {
     if (!this._baseGrid || this._baseGridName != this.room.architectureName) {
       this._baseGridName = this.room.architectureName
       let imgSrc = this.room.architecturePath + uri`/${this.room.architecture.pathfinding}`
-      this._baseGrid = await pathfindingGridFromImage(imgSrc)
+      this._baseGrid = await pathfindingGridFromImage(imgSrc, 512, this.cameraAngle)
     }
     return this._baseGrid.clone()
   }
@@ -96,11 +97,59 @@ class LayerMapComponent extends nanocomponent {
   async findPath(startX, startY, endX, endY) {
     let grid = await this.getPathfindingGrid()
     let finder = new PF.AStarFinder({ allowDiagonal: true })
-    let path = finder.findPath(startX, startY, endX, endY, grid)
-    return path.map(([x,y])=> [
+    let path = finder.findPath(
+      // start coordinates in the grid
+      Math.round(startX * grid.width), Math.round(startY * grid.height),
+      // end coordinates in the grid
+      Math.round(endX * grid.width), Math.round(endY * grid.height),
+      grid
+    )
+    return PF.Util.smoothenPath(grid, path).map(([x,y])=> [
       x / grid.width,
       y / grid.height,
     ])
+  }
+
+  // converts output of this.findPath() to everything needed to call WebAnimations API
+  pathToAnimation(path) {
+    let yScaling = this.yScaling
+    let keyframes = []
+    let options = {
+      duration: 0,
+      fill: 'forwards',
+    }
+    let getDistance = (a, b)=> Math.sqrt(Math.pow(Math.abs(b[0] - a[0]), 2) + Math.pow(Math.abs(b[1] - a[1]) / yScaling, 2))
+    let timePerDistance = parseDuration(this.room.architecture.walkDuration || '10s')
+    let prev = path[0]
+    let viewport = this.getViewport()
+    path.forEach(now => {
+      let [x, y] = now
+      let distance = getDistance(prev, now)
+      let stepTime = distance * timePerDistance
+      options.duration += stepTime
+      keyframes.push({
+        offset: options.duration,
+        ...this.computeAvatarStylesForPosition(x, y)
+      })
+    })
+    // finally, scale the offset values to be within 0.0 and 1.0
+    keyframes.forEach(keyframe => {
+      keyframe.offset = keyframe.offset / options.duration
+    })
+    // maybe duration needs to be an integer?
+    options.duration = Math.round(options.duration)
+    // return everything we need
+    return { keyframes, options }
+  }
+
+  async animatePersonTo(person, x, y) {
+    let avatar = this.avatarForPerson(person)
+    let element = avatar.render()
+    let path = await this.findPath(person.attributes.x, person.attributes.y, x, y)
+    let { keyframes, options } = this.pathToAnimation(path)
+    console.log("Animation", { keyframes, options })
+    let animation = element.animate(keyframes, options)
+    await animation.finished
   }
 
   getGraphicSize() {
@@ -112,11 +161,12 @@ class LayerMapComponent extends nanocomponent {
 
   getViewport() {
     if (!this.element) return { width: 1280, height: 720 }
+
     let graphicSize = this.getGraphicSize()
     let ratio = (graphicSize.height / graphicSize.width)
-    return {
+    return this.getViewport.cache = {
       width: this.element.clientWidth,
-      height: Math.round(this.element.clientWidth * ratio)
+      height: Math.round(this.element.clientWidth * ratio),
     }
   }
 
@@ -141,17 +191,27 @@ class LayerMapComponent extends nanocomponent {
     return Math.round(clamped * 10000)
   }
 
+  // gets camera angle from architecture or defaults to isometric
+  get cameraAngle() {
+    if (typeof(this.room.architecture.cameraAngle) == 'number') {
+      return this.room.architecture.cameraAngle
+    } else { // default to isometric
+      return (Math.atan(4 / 3) * 180 / Math.PI)
+    }
+  }
+
+  // returns a scaling value which can be used to compute things like the ratio of vertical movement speed compared to horizontal
+  get yScaling() {
+    // conversion from degrees to radians
+    let degrad = 180 / Math.PI
+    // figure out how much we need to adjust by orthographic perspective to calculate an accurate Z value
+    return Math.sin(this.cameraAngle / degrad)
+  }
+
   // guess a Z value (centre bottom edge based) from camera angle and 2d coordinates
   xyToZ(x, y) {
-    let degrad = 180 / Math.PI
-    // load camera angle from architecture file
-    let cameraAngleDeg = this.room.architecture.cameraAngle
-    // default to isometric angle if not set
-    if (typeof(cameraAngleDeg) != 'number') cameraAngleDeg = (Math.atan(4 / 3) * degrad)
-    // figure out how much we need to adjust by orthographic perspective to calculate an accurate Z value
-    let scaling = Math.sin(cameraAngleDeg / degrad)
     // return a scaled Z-Index integer number
-    return y * scaling
+    return y * this.yScaling
   }
 
   xyToZIndex(x, y) { return this.zScale(this.xyToZ(x, y)) }
@@ -176,8 +236,7 @@ class LayerMapComponent extends nanocomponent {
 
   // computes how scaled the avatar should be, defaulting to 1.0, overridden by architecture 'avatarScale' property
   // and if an 'avatarFarScale' property is present, the value is scaled between avatarScale and avatarFarScale depending on y coordinates
-  computeAvatarScale(avatar) {
-    let { x, y } = avatar.person.attributes
+  computeAvatarScale(x, y) {
     let { avatarScale, avatarFarScale } = this.room.architecture
     let worldScale = this.getViewport().width / 1000
     if (Number.isFinite(avatarScale)) {
@@ -188,6 +247,22 @@ class LayerMapComponent extends nanocomponent {
       }
     } else {
       return 1.0 * worldScale
+    }
+  }
+
+  computeAvatarScaleTransform(x, y) {
+    let scale = Math.round(this.computeAvatarScale(x, y) * 5000) / 5000
+    // TODO: Investigate if percentages can be used instead of 64 magic number, and if not, can the 64px number come from the avatar element somehow? calc()?
+    return `scale(${scale}) translateY(${Math.round(64 * (1.0 - scale))}px)`
+  }
+
+  computeAvatarStylesForPosition(x, y) {
+    let viewport = this.getViewport()
+    return {
+      zIndex: `${this.xyToZIndex(x, y)}`,
+      left: `${Math.round(x * viewport.width)}px`,
+      top: `${Math.round(y * viewport.height)}px`,
+      transform: this.computeAvatarScaleTransform(x, y)
     }
   }
 
@@ -203,15 +278,9 @@ class LayerMapComponent extends nanocomponent {
         },
         isMyself: person.identity == this.room.myself.identity
       }))
-
-      // setup dynamic styles linked back to this object's state and style info
-      avatar.style.zIndex = ()=> this.xyToZIndex(avatar.person.attributes.x, avatar.person.attributes.y).toString()
-      avatar.style.left = ()=> `${(avatar.person.attributes.x * this.getViewport().width)}px`
-      avatar.style.top = ()=> `${(avatar.person.attributes.y * this.getViewport().height)}px`
-      avatar.style.setVariables({
-        scale: ()=> `${this.computeAvatarScale(avatar)}`
-      })
     }
+    // update styles
+    avatar.style.set(this.computeAvatarStylesForPosition(avatar.person.attributes.x, avatar.person.attributes.y))
     return avatar
   }
 
