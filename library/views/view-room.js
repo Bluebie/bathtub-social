@@ -126,6 +126,10 @@ class RoomView extends nanocomponent {
       console.log("no webcam??")
     }
   }
+
+  update() {
+    return true
+  }
 }
 
 module.exports = RoomView

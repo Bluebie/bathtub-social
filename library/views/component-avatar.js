@@ -30,7 +30,11 @@ class AvatarComponent extends nanocomponent {
   // returns an object with every important piece of information used by this component, for element cache invalidation
   get inputs() {
     let { hue, x, y, authority, decoration } = this.person.attributes
-    return { hue, x, y, authority, decoration, webcam: this.person.avatar }
+    return {
+      hue, x, y, authority, decoration,
+      isMyself: this.isMyself,
+      webcam: this.person.avatar ? this.person.avatar.src : null,
+    }
   }
 
   handleClick(event) {
@@ -38,15 +42,15 @@ class AvatarComponent extends nanocomponent {
   }
 
   createElement() {
-    let { hue, x, y, authority, decoration, webcam } = this.lastRenderInputs = this.inputs
+    let { hue, x, y, authority, decoration, isMyself, webcam } = this.lastRenderInputs = this.inputs
     this.style.setVariables({ hue, x, y })
 
     let classList = ['avatar']
-    if (this.isMyself) classList.push('myself')
+    if (isMyself) classList.push('myself')
 
     let elements = []
-    if (this.person.avatar !== undefined && this.person.avatar.src !== undefined) {
-      elements.push(html`<img class="image" src="${webcam.src}" width="${webcam.width}" height="${webcam.height}">`)
+    if (webcam) {
+      elements.push(html`<img class="image" src="${webcam}">`)
     } else {
       elements.push(html`<span class="image awaiting-image"></span>`)
     }
@@ -64,7 +68,7 @@ class AvatarComponent extends nanocomponent {
 
   // update when the inputs changed
   update() {
-    return !deepEql(this.state, this.lastRenderInputs)
+    return !deepEql(this.inputs, this.lastRenderInputs)
   }
 }
 

@@ -31,13 +31,14 @@ html, body {
 /* css animation to playback a filmstrip in an avatar */
 .avatar {
   --scale: 1.0;
-  --border-width: calc(4px * var(--scale));
-  --size: calc((64px * var(--scale)));
-  border-radius: calc((var(--size) / 2) + var(--border-width));
-  width: var(--size);
-  height: var(--size);
+  --border-width: 3px;
+  --size: 64px;
+  border-radius: 35px;
+  width: 64px;
+  height: 64px;
+  transform: scale(var(--scale)) translateY(calc(64px * (1.0 - (var(--scale)))));
 
-  border: var(--border-width) solid transparent;
+  border: 3px solid transparent;
   background-image: linear-gradient(to top,    hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%)),
                     linear-gradient(to bottom, hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%));
   background-origin: border-box;
@@ -52,7 +53,10 @@ html, body {
   height: 100%;
   border-radius: 50%;
   display: block;
-  
+}
+
+.avatar.myself .image {
+  transform: scaleX(-1);
 }
 
 .avatar .decoration {
