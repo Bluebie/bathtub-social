@@ -30,7 +30,6 @@ class MapLayer extends nanocomponent {
   get inputs() {
     return {
       url: this.config.url,
-      maskImage: this.config.maskImage,
       x: this.config.x === undefined ? 0.5 : this.config.x,
       y: this.config.y === undefined ? 1.0 : this.config.y,
       width: this.config.info.width * this.map.scale,
@@ -48,13 +47,10 @@ class MapLayer extends nanocomponent {
     let { url, x, y, width, height, viewport } = this.renderedInputs = this.inputs
     
     // update location
-    this.style.set({
-      left: `${(x * viewport.width) - (width / 2)}px`,
-      top: `${(y * viewport.height) - height}px`,
-      width: `${width}px`,
-      height: `${height}px`,
-      maskImage: maskImage? `url("${this.assetURL(maskImage)})` : null
-    })
+    this.style.left = `${(x * viewport.width) - (width / 2)}px`
+    this.style.top = `${(y * viewport.height) - height}px`
+    this.style.width = `${width}px`
+    this.style.height = `${height}px`
 
     // render html
     return html`<img class="layer" src="${this.assetURL(url)}" style="${this.style}">`
