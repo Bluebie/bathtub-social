@@ -1,7 +1,8 @@
 const EventEmitter = require('events')
 const Identity = require('../crypto/identity')
 const uri = require('encodeuricomponent-tag') // uri encodes template literals
-const updateObject = require('../features/update-object')
+const patchFunction = require('../features/patch-function')
+const jsonMergePatch = require('json-merge-patch')
 const config = require('../../package.json').bathtub
 // ensure fetch is available
 require('isomorphic-fetch')
@@ -48,38 +49,33 @@ class RoomClient extends EventEmitter {
   }
 
   // update shared attributes for this user
-  // accepts either a structured array:
-  // [
-  //   [['path','to','property'], newValue],
-  //   [['path','to','otherProperty'], newValue2]
-  // ]
-  // or object form:
-  // {
-  //   "path.to.property": newValue,
-  //   "path.to.otherProperty": newValue2
-  // }
-  // All updates will be applied to the attributes object of this user as the root object.
-  // client cannot overwrite properties above that level. All data in person.attributes should
-  // be assumed to be user generated
-  async updateAttributes(personAttributes) {
-    let updates = personAttributes
-    if (!Array.isArray(updates)) {
-      updates = Object.entries(updates).map(([key, value])=> 
-        [key.split('.'), value]
-      )
+  // updates can be either:
+  //  - a modifier function, which is passed a copy of the attributes object to modify
+  //    e.g.: attributes => { attributes.x = 0.5; delete attributes.hue }
+  //  - a JSON Merge Patch (RFC 7396) which is applied to the attributes object
+  //    e.g.: { x: 0.5, hue: null }
+  async updateAttributes(patch) {
+    // run any patch generating callbacks
+    patch = patchFunction(this.myself.attributes, patch)
+
+    if (typeof(patch) !== 'object' || Array.isArray(patch)) {
+      throw new Error("argument must be a plain object JSON Merge Patch, or a modifier function")
     }
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/set-attributes`, { updates })
-    if (response.error) throw new Error(response.error)
-    else if (response.success) return true
+    
+    let response = await this.identity.postJSON(config.apiRoot + uri`/rooms/${this.roomID}/set-attributes`, { patch })
+    if (response.ok) {
+      return true
+    } else if (response.error) {
+      throw new Error(response.error)
+    }
   }
 
-  // upload an avatar
+  // upload an avatar, accepts a buffer containing JPEG data
   async uploadAvatar(avatarBuffer) {
     let apiPath = uri`/rooms/${this.roomID}/avatar`
-    let response = await this.identity.signedFetch(`${config.apiRoot}${apiPath}`, {
+    let response = await this.identity.post(`${config.apiRoot}${apiPath}`, {
       mode: 'same-origin',
       cache: 'no-cache',
-      method: 'POST',
       headers: { 'Content-Type': 'image/jpeg' },
       body: avatarBuffer,
     })
@@ -98,11 +94,10 @@ class RoomClient extends EventEmitter {
   async leave() {
     this.sse.close() // stop the eventstream
 
-    let message = { leave: true }
     // with keepalive so leave events work even if fired during page navigation events
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/leave`, message, { keepalive: true })
+    let response = await this.identity.postJSON(config.apiRoot + uri`/rooms/${this.roomID}/leave`, { leave: true }, { keepalive: true })
     if (response.error) throw new Error(response.error)
-    else if (response.success) return true
+    else if (response.ok) return true
   }
 
   // send a text message
@@ -121,44 +116,17 @@ class RoomClient extends EventEmitter {
 
   // send a direct message to another user (i.e. for establishing a webrtc connection)
   async dm(toIdentity, message) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/send`, { ...message, to: toIdentity })
+    let response = await this.identity.postJSON(config.apiRoot + uri`/rooms/${this.roomID}/send`, { ...message, to: toIdentity })
     if (response.error) throw new Error(response.error)
-    else if (response.success) return true
+    else if (response.ok) return true
   }
 
   // broadcast arbitrary information to the room
   async broadcast(message) {
-    let response = await this.postJSON(uri`/rooms/${this.roomID}/send`, message)
+    let response = await this.identity.postJSON(config.apiRoot + uri`/rooms/${this.roomID}/send`, message)
     if (response.error) throw new Error(response.error)
-    else if (response.success) return true
+    else if (response.ok) return true
   }
-
-  // GETs a json response from a GET capable API
-  async getJSON(apiPath, options = {}) {
-    let pathname = `${config.apiRoot}${apiPath}`
-    let response = await this.identity.signedFetch(pathname, {
-      cache: 'no-cache', mode: 'same-origin', ...options
-    })
-    return await response.json()
-  }
-
-  // POSTs a signed request to a POST capable API
-  async postJSON(apiPath, message, options = {}) {
-    let json = JSON.stringify(message)
-    let pathname = `${config.apiRoot}${apiPath}`
-    let response = await this.identity.signedFetch(pathname, {
-      mode: 'same-origin',
-      cache: 'no-cache',
-      ...options,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: json,
-    })
-    return await response.json()
-  }
-
 
   ////// Handlers for processing server sent events \\\\\\\
   // initial room state snapshot sets current state
@@ -217,8 +185,9 @@ class RoomClient extends EventEmitter {
   _message_personChange(message) {
     let person = this.getPerson(message.identity)
     if (!person) return console.error(`Recieved personChange event from unknown person`, message)
-    // for each update, resolve the path and overwrite the updated value
-    updateObject(person, message.updates)
+    
+    // update local state with patches
+    jsonMergePatch.apply(person, message.updates)
 
     this.emit('personChange', person)
     this.emit('peopleChange', this)

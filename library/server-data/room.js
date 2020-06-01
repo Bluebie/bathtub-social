@@ -3,7 +3,8 @@
 const appRoot = require('app-root-path')
 const SubscriptionLog = require('./subscription-log')
 const config = require('../../package.json').bathtub
-const updateObject = require('../features/update-object')
+const jsonPatch = require('json-merge-patch')
+const patchFunction = require('../features/patch-function')
 const fs = require('fs-extra')
 const imageSize = require('image-size')
 
@@ -62,7 +63,7 @@ class Room {
       joined: Date.now(),
     }
 
-    if (JSON.stringify(person).length > config.personObjectMaxSize) {
+    if (JSON.stringify(person.attributes).length > config.personAttributesMaxSize) {
       throw new Error("Person Object is too large!")
     }
 
@@ -77,23 +78,25 @@ class Room {
   }
 
   // person can be altered
-  personChange(identity, updates = []) {
+  // identity must be a base64 identity publicKey
+  // updates must be either a plain object, in the JSON Merge Patch (RFC 7396) format
+  //  - or it can be a callback function, which recieves a clone of the person object to modify
+  //    and automatically generates a JSON Merge Patch
+  personChange(identity, updates = {}) {
     let person = this.getPerson(identity)
     if (!person) throw new Error("This person isn't in the room")
 
+    // if the update argument is a function, call it and generate a JSON Patch from it's modifications to the object
+    updates = patchFunction(person, updates)
+
     // test the update to verify person object doesn't get too big
     let clone = JSON.parse(JSON.stringify(person))
-    updateObject(clone, updates)
-    if (JSON.stringify(clone).length > config.personObjectMaxSize) {
-      throw new Error("Person Object would grow too large! Cannot accept update")
+    jsonPatch.apply(clone, updates)
+    if (JSON.stringify(clone.attributes).length > config.personAttributesMaxSize) {
+      throw new Error("Person Object's attributes property would grow too large! Cannot accept update")
     }
 
     this.log.append('personChange', { identity, updates })
-  }
-
-  // work out how large the person's object will be if some updates are applied
-  sizeOfPersonChange(identity, updates = []) {
-
   }
 
   // eventually remove person from room
@@ -132,8 +135,8 @@ class Room {
       let person = this.getPerson(data.identity)
       if (!person) throw new Error(`No person exists with public key identity string ${data.identity}`)
 
-      // follow the path specified in each update entry and write over it's value
-      updateObject(person, data.updates)
+      // apply patches to person object so server has up to date user state
+      jsonPatch.apply(person, data.updates)
 
     } else if (messageType == 'roomChange') {
       if (data.architecture) this.architecture = data.architecture
