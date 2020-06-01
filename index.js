@@ -18,6 +18,7 @@ if (config.development) {
   // serve live styles folder
   app.use('/style', express.static('./style'))
   app.use('/configuration', express.static('./configuration'))
+  app.use('/library', express.static('./library'))
 
   // dynamically rebuild bundle on request for development
   app.get('/bundle.js', async (req,res)=> {
@@ -34,7 +35,7 @@ app.use('/rooms', require('./library/server-routes/route-rooms.js'))
 // add static server support in case there's no front end proxy during development
 //app.use(express.static('./build'))
 
-app.listen(process.env.SERVER_PORT || 8080)
+app.listen(process.env.SERVER_PORT || config.appServerPort || 5156)
 
 process.stdin.on("data", ()=> {
   console.log("Terminating...")
