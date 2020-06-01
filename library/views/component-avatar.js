@@ -18,10 +18,11 @@ function avatarDecoration(decorationName) {
 }
 
 class AvatarComponent extends nanocomponent {
-  constructor({ person, onClick, style } = {}) {
+  constructor({ person, onClick, style, isMyself } = {}) {
     super()
     this.person = person
     this.style = new StyleObject(style)
+    this.isMyself = isMyself
     this.onClick = onClick
     this.handleClick = this.handleClick.bind(this)
   }
@@ -40,6 +41,9 @@ class AvatarComponent extends nanocomponent {
     let { hue, x, y, authority, decoration, webcam } = this.lastRenderInputs = this.inputs
     this.style.setVariables({ hue, x, y })
 
+    let classList = ['avatar']
+    if (this.isMyself) classList.push('myself')
+
     let elements = []
     if (this.person.avatar !== undefined && this.person.avatar.src !== undefined) {
       elements.push(html`<img class="image" src="${webcam.src}" width="${webcam.width}" height="${webcam.height}">`)
@@ -51,11 +55,11 @@ class AvatarComponent extends nanocomponent {
       elements.push(avatarDecoration(decoration))
     }
 
-    if (authority == 'Admin') {
+    if (authority) {
       elements.push(avatarDecoration('Admin Swoops'))
     }
 
-    return html`<div class="avatar" style="${this.style}">${elements}</div>`
+    return html`<div class="${classList.join(' ')}" style="${this.style}" data-identity="${this.person.identity}">${elements}</div>`
   }
 
   // update when the inputs changed

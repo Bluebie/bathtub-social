@@ -201,7 +201,7 @@ class LayerMapComponent extends nanocomponent {
         onClick: (event)=> {
           if (this.onClickPerson) this.onClickPerson(event, person)
         },
-        isMyself: person.identity == this.room.myself.identity,
+        isMyself: person.identity == this.room.myself.identity
       }))
 
       // setup dynamic styles linked back to this object's state and style info
