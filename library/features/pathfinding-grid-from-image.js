@@ -1,26 +1,7 @@
 // initialises qiao's PathFinding.js library with a grid from a black and white thresholded image
 const PF = require('pathfinding')
-
-// loads an image and resolves the image when it's done loading
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    let img = new Image()
-    img.onload = ()=> { resolve(img) }
-    img.onerror = (...args)=> { reject(...args) }
-    img.src = src
-  })
-}
-
-// draws an image to a canvas with a specified width and height (scaled) and returns an ImageData object with the pixels
-function loadScaledImageData(img, width, height) {
-  let canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-  let ctx = canvas.getContext('2d')
-  ctx.drawImage(img, 0, 0, width, height)
-  let imageData = ctx.getImageData(0, 0, width, height)
-  return imageData
-}
+const loadImage = require('./load-image')
+const loadScaledImageData = require('./load-scaled-image-data')
 
 // loads a pathfinding grid from an image URL, with a set width and appropriately scaled height based on
 // cameraAngle in degrees
