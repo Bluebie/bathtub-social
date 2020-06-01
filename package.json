@@ -17,7 +17,7 @@
     "element-on": "^1.0.1",
     "encodeuricomponent-tag": "^1.0.1",
     "express": "^4.17.1",
-    "express-reload": "^1.2.0",
+    "face-api.js": "^0.22.2",
     "fs-extra": "^9.0.0",
     "image-size": "^0.8.3",
     "inline-style": "^2.0.0",
