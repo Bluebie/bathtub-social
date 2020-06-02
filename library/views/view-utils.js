@@ -19,10 +19,15 @@ let ViewUtils = {
     if (!path.startsWith("/")) path = `/${path}`
     // trim off build section
     if (path.startsWith("/build/")) path = path.substr(6)
-    // hash the file
-    let hash = crypto.createHash('sha256')
-    hash.update(fs.readFileSync(appRootPath.resolve(`build/${path}`)))
-    return (decacheCache[path] = `${ViewUtils.pathURL(path)}?${hash.digest('hex').slice(0, 8)}`)
+    // if in production mode, hash the files and cache the hashes
+    if (!config.development) {
+      // hash the file
+      let hash = crypto.createHash('sha256')
+      hash.update(fs.readFileSync(appRootPath.resolve(`build/${path}`)))
+      return (decacheCache[path] = `${ViewUtils.pathURL(path)}?version=${hash.digest('hex').slice(0, 8)}`)
+    } else { // otherwise, just put the current time, to prevent any client side caching
+      return `${ViewUtils.pathURL(path)}?version=time-${Date.now().toString(36)}`
+    }
   },
 
   // adjust paths for inclusion in HTML to take in to account mount point in site
