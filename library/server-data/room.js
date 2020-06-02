@@ -6,6 +6,7 @@ const config = require('../../package.json').bathtub
 const jsonPatch = require('json-merge-patch')
 const patchFunction = require('../features/patch-function')
 const fs = require('fs-extra')
+const bytes = require('bytes')
 const imageSize = require('image-size')
 
 class Room {
@@ -63,7 +64,7 @@ class Room {
       joined: Date.now(),
     }
 
-    if (JSON.stringify(person.attributes).length > config.personAttributesMaxSize) {
+    if (JSON.stringify(person.attributes).length > bytes.parse(config.personAttributesMaxSize)) {
       throw new Error("Person Object is too large!")
     }
 
@@ -92,7 +93,7 @@ class Room {
     // test the update to verify person object doesn't get too big
     let clone = JSON.parse(JSON.stringify(person))
     jsonPatch.apply(clone, updates)
-    if (JSON.stringify(clone.attributes).length > config.personAttributesMaxSize) {
+    if (JSON.stringify(clone.attributes).length > bytes.parse(config.personAttributesMaxSize)) {
       throw new Error("Person Object's attributes property would grow too large! Cannot accept update")
     }
 

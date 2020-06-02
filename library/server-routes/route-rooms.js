@@ -4,6 +4,7 @@ const appRoot = require('app-root-path')
 const SSE = require('sse-writer')
 const mediasoup = require('mediasoup')
 const publicIP = require('public-ip')
+const bytes = require('bytes')
 const config = require('../../package.json').bathtub
 const Room = require('../server-data/room')
 const { signedMiddleware, requireSignature } = require('../crypto/parse-request')
@@ -192,7 +193,7 @@ app.post('/:roomID/avatar', requireSignature, (req, res)=> {
   if (req.get('Content-Type') != config.avatarMimeType) return res.status(500).send({ error: "Post body must be a JPEG" })
 
   if (!Buffer.isBuffer(req.body)) return res.status(500).send({ error: "Image data didn't arrive as a buffer??" })
-  if (req.body.byteLength > config.avatarMaxData) return res.status(500).send({ error: "Image data is too large in bytes" })
+  if (req.body.byteLength > bytes.parse(config.avatarMaxData)) return res.status(500).send({ error: "Image data is too large in bytes" })
   if (req.body.byteLength < 8) return res.status(500).send({ error: "Image data is too small in bytes" })
   
   let size = sizeOf(req.body)

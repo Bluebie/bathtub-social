@@ -71,10 +71,10 @@
       "stun:stun.l.google.com:19302"
     ],
     "avatarSize": 128,
-    "avatarMaxData": 32768,
+    "avatarMaxData": "32kb",
     "avatarQuality": 0.6,
     "avatarMimeType": "image/jpeg",
     "avatarInterval": "1s",
-    "personObjectMaxSize": 60000
+    "personAttributesMaxSize": "4kb"
   }
 }
