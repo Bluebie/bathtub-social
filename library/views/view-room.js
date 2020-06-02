@@ -4,7 +4,7 @@ const nanocomponent = require('nanocomponent')
 
 const TextComposer = require('./component-text-composer')
 const VideoCrossbar = require('./component-video-crossbar')
-const LayerMap = require('./component-layer-map')
+const LayerMap = require('../map/map')
 const ChatLog = require('./component-chat-log')
 const RoomClient = require('../client-data/room')
 const HueRing = require('./widget-hue-ring')
@@ -73,9 +73,12 @@ class RoomView extends nanocomponent {
 
     // when people change their attributes, update anything that depends on that data
     this.room.on('peopleChange', ()=> {
-      this.map.render()
       this.messages.render()
     })
+
+    this.room.on('personJoin', person => this.map.render() )
+    this.room.on('personLeave', person => this.map.render() )
+    this.room.on('personChange', person => this.map.handlePersonChange(person) )
 
     // when text messages come in from the server, append them and trigger rendering of Chat Log Component
     this.room.on('text', ({identity, message}) => {

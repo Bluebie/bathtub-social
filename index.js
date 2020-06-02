@@ -31,6 +31,7 @@ if (config.development) {
 
 // add route handlers for /room API
 app.use('/rooms', require('./library/server-routes/route-rooms.js'))
+app.use('/config', require('./library/server-routes/route-config.js'))
 
 // add static server support in case there's no front end proxy during development
 //app.use(express.static('./build'))

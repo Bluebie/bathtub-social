@@ -1,7 +1,5 @@
 const html = require('nanohtml')
-const raw = require('nanohtml/raw')
-const URL = require('url').URL
-const { decache, pathURL } = require('./view-utils')
+const { decache } = require('./view-utils')
 const config = require('../../package.json').bathtub
 
 class DocumentTemplate {

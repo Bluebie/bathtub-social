@@ -29,9 +29,9 @@ class AvatarComponent extends nanocomponent {
 
   // returns an object with every important piece of information used by this component, for element cache invalidation
   get inputs() {
-    let { hue, x, y, authority, decoration } = this.person.attributes
+    let { hue, authority, decoration } = this.person.attributes
     return {
-      hue, x, y, authority, decoration,
+      hue, authority, decoration,
       isMyself: this.isMyself,
       webcam: this.person.avatar ? this.person.avatar.src : null,
     }
