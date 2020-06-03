@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>testing svg depth map integration</title>
+  </head>
+  <body bgcolor="#556699">
+    <svg viewBox="0 0 1024 1024">
+      <defs>
+        <symbol id="avatar" viewBox="0 0 64 64">
+          <circle r="32" cx="32" cy="32" fill="blue"></circle>
+        </symbol>
+        <mask id="env-depth">
+          <image href="depth0000.jpg" viewBox="0 0 512 512" width="100%" filter="url(#depth-filter)"></image>
+        </mask>
+        <filter id="depth-filter">
+          <!--
+            color matrix guide:
+                 R G B A W
+            R' | 1 0 0 0 0 |
+            G' | 0 1 0 0 0 |
+            B' | 0 0 1 0 0 |
+            A' | 0 0 0 1 0 |
+          -->
+          <feColorMatrix type="matrix" values="1.0 0.0 0.0 0.0 0.2
+                                               0.0 1.0 0.0 0.0 0.2
+                                               0.0 0.0 1.0 0.0 0.2
+                                               0.0 0.0 0.0 0.0 1"></feColorMatrix>
+          <feComponentTransfer>
+            <feFuncR type="discrete" tableValues="1 0"></feFuncR>
+            <feFuncG type="discrete" tableValues="1 0"></feFuncG>
+            <feFuncB type="discrete" tableValues="1 0"></feFuncB>
+          </feComponentTransfer>
+          <!-- turn green channel in to greyscale opaque image: -->
+          <!-- <feColorMatrix type="matrix" values="0 1 0 0 0  0 1 0 0 0  0 1 0 0 0  0 0 0 0 1"></feColorMatrix> -->
+        </filter>
+        <mask id="avatar-depth-filter" mask-type="luminance">
+          <rect width="100%" height="100%" fill="hsl(0, 0%, 50%)"></rect>
+        </mask>
+      </defs>
+      <!-- <image href="depth0000.jpg" viewBox="0 0 512 512" width=100%></image> -->
+      <image href="color0000.jpg" viewBox="0 0 512 512" width=100% mask="url(#env-depth)"></image>
+      <g id="avatar-instance" filter="">
+        <use href="#avatar" x="200" y="200" width="64" height="64"></use>
+      </g>
+    </svg>
+  </body>
+</html>

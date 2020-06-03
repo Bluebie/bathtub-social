@@ -44,6 +44,8 @@ class MapObject extends nanocomponent {
     this.anchor = anchor
     /** @type {Coordinate2D} */
     this.position = { x: 0, y: 0 }
+
+    this.easingFunction = 'cubic-bezier(.26,.03,.87,1)'
   }
 
   get width() { return this.element.clientWidth }
@@ -138,19 +140,23 @@ class MapObject extends nanocomponent {
       }
     })
     // populate options with duration
-    let options = { duration: distanceTraveled * 4000, fill: 'forwards' }
+    let options = {
+      duration: distanceTraveled * 4000,
+      fill: 'forwards',
+      easing: this.easingFunction,
+    }
     // rescale offsets to within 0.0 to 1.0 range
     keyframes.forEach(keyframe => keyframe.offset /= distanceTraveled)
 
     // add easing functions to first and last keyframe
-    if (keyframes.length > 2) {
-      keyframes[0].easing = 'ease-in'
-      keyframes.slice(-2).forEach(keyframe =>
-        keyframe.easing = keyframes.length == 2 ? 'ease-in-out' : 'ease-out'
-      )
-    } else {
-      keyframes.forEach(keyframe => keyframe.easing = 'ease-in-out')
-    }
+    // if (keyframes.length > 2) {
+    //   keyframes[0].easing = 'ease-in'
+    //   keyframes.slice(-2).forEach(keyframe =>
+    //     keyframe.easing = keyframes.length == 2 ? 'ease-in-out' : 'ease-out'
+    //   )
+    // } else {
+    //   keyframes.forEach(keyframe => keyframe.easing = 'ease-in-out')
+    // }
 
     // make sure any past animations have finished
     if (this.animation) await this.animation.finished

@@ -1,6 +1,6 @@
 {
   "roomID": "test-room",
-  "humanName": "Cyberspace",
+  "humanName": "Cyberspace Test Room",
   "architecture": "cyberspace",
   "maxPeople": 15,
   "links": {}

@@ -1,0 +1,12 @@
+{
+  "background": "color0000.jpeg",
+  "depthMap": "depth0000.jpeg",
+  "layers": [],
+  "avatarScale": 0.75,
+  "avatarFarScale": 0.33,
+  "mapType": "depth",
+  "pathfinding": "pathfinding.png",
+  "regionMap": "region-map.png",
+  "regions": {},
+  "spawn": { "x": 0.2, "y": 0.5 }
+}

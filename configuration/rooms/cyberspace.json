@@ -1,0 +1,7 @@
+{
+  "roomID": "cyberspace",
+  "humanName": "Cyberspace",
+  "architecture": "cyberspace-depth",
+  "maxPeople": 30,
+  "links": {}
+}
