@@ -42,6 +42,7 @@
     "uuid": "^7.0.3"
   },
   "devDependencies": {
+    "canvas": "^2.6.1",
     "uglifyify": "^5.0.2",
     "unassertify": "^2.1.1"
   },
