@@ -25,7 +25,7 @@ class Room {
     // augment architecture with image sizes on layers
     if (this.architecture.layers) {
       this.architecture.layers.forEach(layer => {
-        let info = imageSize(appRoot.resolve(`/configuration/architectures/${this.architectureName}/${layer.url}`))
+        let info = imageSize(appRoot.resolve(`/configuration/architectures/${this.architectureName}/${layer.image}`))
         layer.info = info
       })
     }

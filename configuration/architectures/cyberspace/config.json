@@ -1,6 +1,8 @@
 {
   "layers": [
-    { "z": 0.0, "url": "background.jpg" }
+    { "z": 0.0000, "image": "cyberspace0003-color.jpeg" },
+    { "z": 0.3160, "image": "cyberspace0002-color.jpeg", "mask": "cyberspace0002-mask.jpeg" },
+    { "z": 0.4418, "image": "cyberspace0001-color.jpeg", "mask": "cyberspace0001-mask.jpeg" }
   ],
   "avatarScale": 0.75,
   "avatarFarScale": 0.33,

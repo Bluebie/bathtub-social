@@ -107,3 +107,12 @@ dist
 # TernJS port file
 .tern-port
 remote-work.sh
+*.blend1
+*.blend2
+*.blend3
+*.blend4
+*.blend5
+*.blend6
+*.blend7
+*.blend8
+*.blend9
