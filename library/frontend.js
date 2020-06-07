@@ -6,7 +6,7 @@ const views = [
 
 window.bathtub = {}
 async function run() {
-  let viewConfig = JSON.parse(document.getElementById('bathtub-bundle').dataset.view)
+  let viewConfig = JSON.parse(atob(document.getElementById('bathtub-bundle').dataset.view))
   let ViewClass = views.find((obj)=> obj.name == viewConfig.view)
   if (ViewClass) {
     bathtub.view = new ViewClass(viewConfig.options)

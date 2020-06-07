@@ -18,7 +18,7 @@ class DocumentTemplate {
       <meta charset="utf-8">
       <link rel=stylesheet href="${decache('style/sheet.css')}">
       <meta name=viewport content="width=device-width">
-      <script defer src="${decache("build/bundle.js")}" id="bathtub-bundle" data-view="${JSON.stringify(viewConfig)}"></script>
+      <script defer src="${decache("build/bundle.js")}" id="bathtub-bundle" data-view="${Buffer.from(JSON.stringify(viewConfig)).toString('base64')}"></script>
     </head>`
   }
 
