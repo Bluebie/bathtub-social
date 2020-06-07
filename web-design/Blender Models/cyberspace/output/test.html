@@ -4,13 +4,14 @@
     <title>testing svg depth map integration</title>
   </head>
   <body bgcolor="#556699">
+    <input type="range" min="-0.5" max="0.5" value="0.0" id="depthSlider" step="any" style="width: 100%">
     <svg viewBox="0 0 1024 1024">
       <defs>
         <symbol id="avatar" viewBox="0 0 64 64">
           <circle r="32" cx="32" cy="32" fill="blue"></circle>
         </symbol>
         <mask id="env-depth">
-          <image href="depth0000.jpg" viewBox="0 0 512 512" width="100%" filter="url(#depth-filter)"></image>
+          <image href="depth0000.jpg" viewBox="0 0 512 512" width="100%" filter="url(#depth-filter)" color-profile="linearRGB"></image>
         </mask>
         <filter id="depth-filter">
           <!--
@@ -21,14 +22,16 @@
             B' | 0 0 1 0 0 |
             A' | 0 0 0 1 0 |
           -->
-          <feColorMatrix type="matrix" values="1.0 0.0 0.0 0.0 0.2
-                                               0.0 1.0 0.0 0.0 0.2
-                                               0.0 0.0 1.0 0.0 0.2
-                                               0.0 0.0 0.0 0.0 1"></feColorMatrix>
-          <feComponentTransfer>
-            <feFuncR type="discrete" tableValues="1 0"></feFuncR>
-            <feFuncG type="discrete" tableValues="1 0"></feFuncG>
-            <feFuncB type="discrete" tableValues="1 0"></feFuncB>
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1" color-interpolation-filter="linearRGB"></feGaussianBlur>
+          <feColorMatrix type="matrix" id="colorMatrix" color-interpolation-filter="linearRGB"
+            values="1 0 0 0 0
+                    0 1 0 0 0
+                    0 0 1 0 0
+                    0 0 0 0 1"></feColorMatrix>
+          <feComponentTransfer color-interpolation-filter="linearRGB">
+            <feFuncR type="discrete" tableValues="0 1" color-interpolation-filter="linearRGB"></feFuncR>
+            <feFuncG type="discrete" tableValues="0 1" color-interpolation-filter="linearRGB"></feFuncG>
+            <feFuncB type="discrete" tableValues="0 1" color-interpolation-filter="linearRGB"></feFuncB>
           </feComponentTransfer>
           <!-- turn green channel in to greyscale opaque image: -->
           <!-- <feColorMatrix type="matrix" values="0 1 0 0 0  0 1 0 0 0  0 1 0 0 0  0 0 0 0 1"></feColorMatrix> -->
@@ -38,10 +41,29 @@
         </mask>
       </defs>
       <!-- <image href="depth0000.jpg" viewBox="0 0 512 512" width=100%></image> -->
-      <image href="color0000.jpg" viewBox="0 0 512 512" width=100% mask="url(#env-depth)"></image>
-      <g id="avatar-instance" filter="">
+      <image id=bgImg href="color0000.jpg" viewBox="0 0 512 512" width=100% mask="url(#env-depth)"></image>
+      <g id="avatarInstance">
         <use href="#avatar" x="200" y="200" width="64" height="64"></use>
       </g>
     </svg>
+
+    <script>
+      function setDepth(num) {
+        let colorMatrix = document.all.colorMatrix
+        colorMatrix.setAttribute('values', `1 0 0 0 ${num} 0 1 0 0 ${num} 0 0 1 0 ${num} 0 0 0 0 1`)
+        let avatar = document.all.avatarInstance.firstElementChild
+        let bgImg = document.all.bgImg
+        bgImg.setAttribute('width', '99%')
+        bgImg.clientWidth
+        bgImg.setAttribute('width', '100%')
+      }
+
+      let slider = document.getElementById('depthSlider')
+      slider.oninput = ()=> {
+        setDepth(slider.value)
+      }
+
+      document.onload = ()=> setDepth("0")
+    </script>
   </body>
 </html>
