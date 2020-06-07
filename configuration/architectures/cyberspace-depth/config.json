@@ -1,10 +1,10 @@
 {
-  "background": "color0000.jpeg",
-  "depthMap": "depth0000.jpeg",
-  "layers": [],
+  "mode": "depth",
+  "layers": [
+    { "name": "background", "image": "color0000.jpeg", "depth": "depth0000.png" }
+  ],
   "avatarScale": 0.75,
   "avatarFarScale": 0.33,
-  "mapType": "depth",
   "pathfinding": "pathfinding.png",
   "regionMap": "region-map.png",
   "regions": {},
