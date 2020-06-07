@@ -26,7 +26,7 @@ let ViewUtils = {
       hash.update(fs.readFileSync(appRootPath.resolve(`build/${path}`)))
       return (decacheCache[path] = `${ViewUtils.pathURL(path)}?version=${hash.digest('hex').slice(0, 8)}`)
     } else { // otherwise, just put the current time, to prevent any client side caching
-      return `${ViewUtils.pathURL(path)}?version=time-${Date.now().toString(36)}`
+      return ViewUtils.pathURL(path)
     }
   },
 
