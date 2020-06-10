@@ -8,5 +8,5 @@
   "pathfinding": "pathfinding.png",
   "regionMap": "region-map.png",
   "regions": {},
-  "spawn": { "x": 0.2, "y": 0.5 }
+  "spawn": { "x": 0.5623, "y": 0.5304 }
 }

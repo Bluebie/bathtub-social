@@ -4,7 +4,7 @@ const nanocomponent = require('nanocomponent')
 
 const TextComposer = require('./component-text-composer')
 const VideoCrossbar = require('./component-video-crossbar')
-const LayerMap = require('../map/map')
+const LayerMap = require('../map2/map')
 const ChatLog = require('./component-chat-log')
 const RoomClient = require('../client-data/room')
 const HueRing = require('./widget-hue-ring')
@@ -66,8 +66,9 @@ class RoomView extends nanocomponent {
 
     // hook up the layer map
     this.map.room = this.room
-    this.room.on('roomChange', ()=> {
+    this.room.on('roomChange', async ()=> {
       document.title = this.title
+      await this.map.loadArchitecture(this.room.architectureName, this.room.architecture)
       this.map.render()
     })
 
@@ -78,7 +79,7 @@ class RoomView extends nanocomponent {
 
     this.room.on('personJoin', person => this.map.render() )
     this.room.on('personLeave', person => this.map.render() )
-    this.room.on('personChange', person => this.map.handlePersonChange(person) )
+    this.room.on('personChange', (person, changes) => this.map.handlePersonChange(person, changes) )
 
     // when text messages come in from the server, append them and trigger rendering of Chat Log Component
     this.room.on('text', ({identity, message}) => {
@@ -93,6 +94,15 @@ class RoomView extends nanocomponent {
       this.room.leave()
     })
 
+    if (this.map.loadArchitecture) {
+      await this.map.loadArchitecture(this.room.architectureName, this.room.architecture)
+      this.map.render()
+    }
+
+    this.map.onMoveTo = (position)=> {
+      this.room.updateAttributes({ x: position.x, y: position.y })
+    }
+
     // join room
     this.room.join({
       hue: Math.round(Math.random() * 360),
@@ -100,34 +110,34 @@ class RoomView extends nanocomponent {
     })
 
     // ask for webcam feed (depends on user permission)
-    this.webcam = await navigator.mediaDevices.getUserMedia({
-      video: {
-        width: 640,
-        height: 480,
-        frameRate: { ideal: 60, min: 10 },
-        facingMode: "user", // front facing camera please
-      },
-      audio: false
-    })
-    // send video feed to a hidden video tag
-    // todo: refactor this in to something nice
-    if (this.webcam) {
-      this.handMirror = html`<video muted playsinline></video>`
-      this.handMirror.srcObject = this.webcam
-      this.handMirror.play()
+    // this.webcam = await navigator.mediaDevices.getUserMedia({
+    //   video: {
+    //     width: 640,
+    //     height: 480,
+    //     frameRate: { ideal: 60, min: 10 },
+    //     facingMode: "user", // front facing camera please
+    //   },
+    //   audio: false
+    // })
+    // // send video feed to a hidden video tag
+    // // todo: refactor this in to something nice
+    // if (this.webcam) {
+    //   this.handMirror = html`<video muted playsinline></video>`
+    //   this.handMirror.srcObject = this.webcam
+    //   this.handMirror.play()
 
-      // setup filmstrip builder, which watches webcam handmirror and saves frames in to the strip
-      // and uploads each strip to the server when they're done
-      this.avatar = new AvatarCapture({
-        source: this.handMirror,
-        onAvatar: (buffer) => {
-          this.room.uploadAvatar(buffer)
-        }
-      })
-      this.avatar.enable()
-    } else {
-      console.log("no webcam??")
-    }
+    //   // setup filmstrip builder, which watches webcam handmirror and saves frames in to the strip
+    //   // and uploads each strip to the server when they're done
+    //   this.avatar = new AvatarCapture({
+    //     source: this.handMirror,
+    //     onAvatar: (buffer) => {
+    //       this.room.uploadAvatar(buffer)
+    //     }
+    //   })
+    //   this.avatar.enable()
+    // } else {
+    //   console.log("no webcam??")
+    // }
   }
 
   update() {

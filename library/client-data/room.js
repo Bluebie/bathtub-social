@@ -146,7 +146,7 @@ class RoomClient extends EventEmitter {
         Object.keys(this.people[person.identity]).forEach(key => { delete this.people[person.identity][key] })
         // set all updated properties
         Object.entries(person).forEach(([key, value]) => { this.people[person.identity][key] = value })
-        this.emit('personChange', this.people[person.identity])
+        this.emit('personChange', this.people[person.identity], {...this.people[person.identity]})
       } else {
         this.people[person.identity] = person
         this.emit('personJoin', this.people[person.identity])
@@ -189,7 +189,7 @@ class RoomClient extends EventEmitter {
     // update local state with patches
     jsonMergePatch.apply(person, message.updates)
 
-    this.emit('personChange', person)
+    this.emit('personChange', person, message.updates)
     this.emit('peopleChange', this)
   }
 

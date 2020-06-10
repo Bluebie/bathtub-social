@@ -28,46 +28,6 @@ html, body {
   color: hsl(var(--fg-hue) var(--fg-sat) var(--fg-lum));
 }
 
-/* css animation to playback a filmstrip in an avatar */
-.avatar {
-  --scale: 1.0;
-  --border-width: 3px;
-  --size: 64px;
-  border-radius: 35px;
-  width: 64px;
-  height: 64px;
-  /* transform: scale(var(--scale)) translateY(calc(64px * (1.0 - (var(--scale))))); */
-
-  border: 3px solid transparent;
-  background-image: linear-gradient(to top,    hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%)),
-                    linear-gradient(to bottom, hsl(var(--hue), 75%, 65%), hsl(var(--hue), 85%, 55%));
-  background-origin: border-box;
-  background-clip: content-box, border-box;
-  box-sizing: border-box;
-
-  transition: border-color var(--anim-duration) var(--anim-fn);
-}
-
-.avatar .image {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  display: block;
-}
-
-.avatar.myself .image {
-  transform: scaleX(-1);
-}
-
-.avatar .decoration {
-  position: absolute;
-  width: calc(var(--size) * 2);
-  height: calc(var(--size) * 2);
-  margin-left: calc((var(--size) * -0.5) - var(--border-width));
-  margin-top: calc((var(--size) * -0.5) - var(--border-width));
-  top: 0; left: 0;
-}
-
 /* habbo hotel style bubbles, demo: https://codepen.io/bluebie/pen/abvzqvj?editors=1100 */
 .bubble-row {
   display: flex;
@@ -181,6 +141,11 @@ html, body {
   margin-left: calc(var(--size) * -0.5);
   margin-top: calc(var(--size) * -1.0);
   /* transition: all var(--anim-duration) var(--anim-fn); */
+}
+
+/* background image */
+.depth-map > img {
+  width: 100%
 }
 
 body.bathtub-room { height: 100vh; padding: 0; margin: 0; overflow: hidden; }
